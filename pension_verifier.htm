@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pension Data Manager</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Roboto,Arial,sans-serif;background:#f4f6fa;color:#202124;font-size:15px}
+
+  header{background:#1a73e8;color:#fff;padding:14px 24px;font-size:18px;font-weight:600;
+         display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+         box-shadow:0 2px 8px rgba(0,0,0,.08)}
+  header .left{display:flex;align-items:center;gap:12px}
+  header .stats{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:500;flex-wrap:wrap}
+  .badge{background:rgba(255,255,255,.2);padding:5px 12px;border-radius:20px}
+  .badge b{font-size:14px}
+
+  /* Sync Indicator Pill */
+  .sync-status{
+    display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);
+    padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;
+    transition:background .2s;
+  }
+  .sync-status.ok{background:#188038;color:#fff}
+  .sync-status.syncing{background:#f9ab00;color:#202124}
+  .sync-status.err{background:#d93025;color:#fff}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block}
+  .sync-status.syncing .sync-dot{animation:pulse .8s infinite alternate}
+  @keyframes pulse{from{opacity:.3}to{opacity:1}}
+
+  .wrap{max-width:1400px;margin:0 auto;padding:20px 22px}
+
+  .counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+  .card{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 2px 6px rgba(0,0,0,.07);
+        border-left:5px solid #1a73e8;transition:transform .2s, box-shadow .2s}
+  .card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.1)}
+  .card.ok{border-left-color:#188038}
+  .card.pending{border-left-color:#f9ab00}
+  .card .num{font-size:30px;font-weight:700;line-height:1}
+  .card .lbl{font-size:11.5px;text-transform:uppercase;color:#5f6368;letter-spacing:.5px;margin-top:6px}
+
+  .filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;background:#fff;
+           padding:12px 14px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  input[type=text],select{padding:10px 12px;border:1px solid #ccc;border-radius:8px;
+                          font-size:13.5px;background:#fff;transition:border-color .2s, box-shadow .2s}
+  input[type=text]:focus,select:focus{outline:none;border-color:#1a73e8;
+                                       box-shadow:0 0 0 3px rgba(26,115,232,.15)}
+  input[type=text]{flex:1;min-width:220px}
+  select{min-width:170px}
+
+  button{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;
+         font-weight:600;font-size:13px;letter-spacing:.2px;
+         transition:transform .12s ease, background .15s, box-shadow .15s, filter .15s;
+         position:relative;overflow:hidden;user-select:none;
+         display:inline-flex;align-items:center;justify-content:center;gap:6px}
+  button:hover{filter:brightness(1.08)}
+  button:active{transform:scale(.94);filter:brightness(.92)}
+  button:disabled{opacity:.65;cursor:not-allowed;transform:none !important}
+  .p{background:#1a73e8;color:#fff;box-shadow:0 2px 6px rgba(26,115,232,.3)}
+  .p:hover{background:#1557b0}
+  .s{background:#188038;color:#fff;box-shadow:0 2px 6px rgba(24,128,56,.3)}
+  .s:hover{background:#0f5c26}
+  .d{background:#d93025;color:#fff;box-shadow:0 2px 6px rgba(217,48,37,.3)}
+  .d:hover{background:#a50e0e}
+  .m{background:#e8eaed;color:#202124}
+  .m:hover{background:#dadce0}
+  .sync-btn{background:#e8f0fe;color:#1a73e8;border:1px solid #c2e7ff}
+  .sync-btn:hover{background:#d2e3fc}
+
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid currentColor;
+        border-top-color:transparent;border-radius:50%;animation:rot .7s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+
+  .tbl{background:#fff;border-radius:10px;overflow:auto;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:11px 13px;text-align:left;border-bottom:1px solid #eee;
+        white-space:nowrap;font-size:13px}
+  th{background:#f1f3f4;font-size:11.5px;text-transform:uppercase;color:#5f6368;
+     letter-spacing:.4px;position:sticky;top:0}
+  tr{transition:background .2s, opacity .35s, transform .35s}
+  tr:hover td{background:#fafbff}
+  tr.verified-hide{animation:fadeOutRow .45s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes fadeOutRow{
+    from{opacity:1;transform:scale(1)}
+    to{opacity:0;transform:scale(.95) translateX(40px)}
+  }
+
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+           z-index:100;overflow-y:auto;padding:20px;animation:fadeIn .22s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .overlay.on{display:block}
+  .modal{max-width:1200px;margin:30px auto;background:#fff;border-radius:14px;
+         padding:24px 28px;box-shadow:0 20px 60px rgba(0,0,0,.35);
+         animation:slideUp .3s cubic-bezier(.2,.8,.2,1)}
+  @keyframes slideUp{from{transform:translateY(40px);opacity:0}
+                     to{transform:translateY(0);opacity:1}}
+  .modal h3{margin:0 0 14px;color:#1a73e8;font-size:19px;
+            display:flex;justify-content:space-between;align-items:center}
+
+  /* Virtual Age Strip */
+  .virtual-age-bar{
+    background:linear-gradient(135deg, #e8f0fe 0%, #e6f4ea 100%);
+    border:1px solid #b7e1cd;
+    border-radius:10px;
+    padding:10px 14px;
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .vab-left{display:flex;align-items:center;gap:10px}
+  .vab-icon{font-size:18px}
+  .vab-title{font-size:11.5px;font-weight:700;text-transform:uppercase;color:#174ea6;letter-spacing:.4px}
+  .vab-value{font-size:14px;font-weight:800;color:#202124}
+  .vab-right{display:flex;align-items:center;gap:8px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+        gap:11px 16px}
+  .grid label{display:flex;flex-direction:column;font-size:11.5px;color:#5f6368;font-weight:600}
+  .lbl-row{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:3px}
+  .lbl-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lbl-badges{display:flex;align-items:center;gap:5px;flex-shrink:0}
+
+  .grid input{padding:9px 11px;border:1px solid #ccc;border-radius:7px;
+              margin-top:2px;font-size:13px;transition:border-color .2s, box-shadow .2s}
+  .grid input:focus{outline:none;border-color:#1a73e8;
+                    box-shadow:0 0 0 3px rgba(26,115,232,.15)}
+
+  /* Non-editable field styling */
+  input[readonly], .readonly-input{
+    background:#f1f3f4 !important;
+    color:#5f6368 !important;
+    cursor:not-allowed !important;
+    border-color:#dadce0 !important;
+    box-shadow:none !important;
+    user-select:all;
+  }
+
+  /* Small green count tag */
+  .cnt-badge{
+    background:#e6f4ea;
+    color:#137333;
+    font-size:10.5px;
+    font-weight:700;
+    padding:1px 6px;
+    border-radius:10px;
+    border:1px solid #ceead6;
+    line-height:1.4;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* Virtual tiny tags */
+  .tiny-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    font-size:10px;
+    font-weight:700;
+    padding:1.5px 6.5px;
+    border-radius:10px;
+    line-height:1.3;
+    letter-spacing:.2px;
+  }
+  .tiny-tag.age{background:#e8f0fe;color:#1a73e8;border:1px solid #d2e3fc}
+  .tiny-tag.age.ok{background:#e6f4ea;color:#137333;border:1px solid #ceead6}
+  .tiny-tag.age.warn{background:#fef7e0;color:#b06000;border:1px solid #fce8b2}
+  .tiny-tag.ref{background:#f1f3f4;color:#5f6368;border:1px solid #dadce0}
+  .tiny-tag.ro{background:#f1f3f4;color:#70757a;border:1px solid #dadce0;font-weight:600}
+
+  .attach-section{margin-top:20px;border-top:1px solid #eee;padding-top:16px}
+  .attach-section h4{margin:0 0 10px;color:#1a73e8;font-size:14px}
+  .attach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+  .attach-row{display:flex;align-items:center;gap:10px;background:#f8f9fc;border:1px solid #e5e8ee;
+              border-radius:8px;padding:9px 11px;transition:.2s}
+  .attach-row.found:hover{background:#eef3fb;border-color:#c9d8ef}
+  .attach-row .doc{flex:1;min-width:0}
+  .attach-row .docname{font-weight:600;font-size:12px;color:#202124;
+                       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .attach-row .docmeta{font-size:10.5px;color:#5f6368;margin-top:2px}
+  .attach-row .pill{font-size:9.5px;padding:2px 7px;border-radius:10px;font-weight:600}
+  .pill.ok{background:#e6f4ea;color:#137333}
+  .pill.miss{background:#fce8e6;color:#a50e0e}
+  .attach-row button{padding:6px 11px;font-size:11px}
+
+  .foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;
+        border-top:1px solid #eee;padding-top:16px;flex-wrap:wrap}
+
+  /* ============ IMAGE VIEWER ============ */
+  #viewerOv{background:rgba(0,0,0,.25);padding:0;overflow:hidden}
+  #viewerOv .viewer-modal{
+    position:fixed;top:60px;left:50%;transform:translateX(-50%);
+    width:min(1100px,92vw);height:min(750px,82vh);
+    background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);
+    display:flex;flex-direction:column;overflow:hidden;transition:box-shadow .2s;
+  }
+  .v-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:11px 16px;background:#1a73e8;color:#fff;gap:10px;cursor:grab;user-select:none;
+  }
+  .v-head.dragging{cursor:grabbing}
+  .v-head h3{
+    margin:0;color:#fff;font-size:14px;font-weight:600;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%;
+  }
+  .v-tools{display:flex;align-items:center;gap:6px}
+  .v-tools button{background:rgba(255,255,255,.15);color:#fff;padding:6px 10px;font-size:11.5px}
+  .v-tools button:hover{background:rgba(255,255,255,.28)}
+  .v-tools .zoom-label{font-size:11.5px;font-weight:600;min-width:44px;text-align:center}
+
+  .v-body{flex:1;background:#202124;overflow:hidden;position:relative;cursor:grab}
+  .v-body.panning{cursor:grabbing}
+  .v-body iframe{
+    position:absolute;top:0;left:0;width:100%;height:100%;
+    border:0;background:#fff;transform-origin:top left;transition:transform .15s ease;
+  }
+  .v-hint{
+    position:absolute;bottom:8px;right:12px;background:rgba(0,0,0,.6);
+    color:#fff;font-size:10.5px;padding:3px 9px;border-radius:20px;pointer-events:none;
+  }
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);
+         background:#323232;color:#fff;padding:12px 20px;border-radius:10px;
+         font-size:13.5px;font-weight:500;opacity:0;
+         transition:.4s cubic-bezier(.2,.8,.2,1);z-index:300;pointer-events:none;
+         box-shadow:0 8px 26px rgba(0,0,0,.3);max-width:90%}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.ok{background:#188038}
+  .toast.err{background:#d93025}
+  .toast.info{background:#1a73e8}
+
+  @media (max-width:600px){
+    .wrap{padding:12px}
+    .modal{padding:16px;margin:8px auto}
+    .card .num{font-size:24px}
+    th,td{padding:8px 9px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="left">
+    <span>Pension Data Manager</span>
+    <span class="sync-status" id="syncStatus">
+      <span class="sync-dot"></span>
+      <span id="syncText">Checking...</span>
+    </span>
+  </div>
+  <div class="stats">
+    <span class="badge">Total <b id="hTotal">0</b></span>
+    <span class="badge">Pending <b id="hPending">0</b></span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="counters">
+    <div class="card"><div class="num" id="cTotal">0</div><div class="lbl">Total Records</div></div>
+    <div class="card pending"><div class="num" id="cPending">0</div><div class="lbl">Not Verified</div></div>
+    <div class="card ok"><div class="num" id="cVerified">0</div><div class="lbl">Verified</div></div>
+  </div>
+
+  <div class="filters">
+    <input id="q" type="text" placeholder="Search Aadhaar / Name / Mobile..."
+           onkeydown="if(event.key==='Enter')applyFilters()"/>
+    <select id="fIFSC" onchange="applyFilters()"><option value="">All IFSC</option></select>
+    <select id="fGP"   onchange="applyFilters()"><option value="">All GP / Ward</option></select>
+    <button class="p" onclick="searchBtn(this)">🔍 Search</button>
+    <button class="m" onclick="resetBtn(this)">↺ Reset</button>
+    <button class="sync-btn" id="btnForceSync" onclick="manualSync(this)">🔄 Sync Now</button>
+  </div>
+
+  <div class="tbl" id="tbl">Loading data...</div>
+</div>
+
+<!-- MAIN EDIT MODAL -->
+<div class="overlay" id="ov">
+  <div class="modal">
+    <h3>
+      <span id="mtitle">Verify Row</span>
+      <button class="m" style="padding:5px 10px;font-size:15px" onclick="closeModal()">✕</button>
+    </h3>
+
+    <!-- VIRTUAL AGE BAR (CALCULATED FROM DOB & APPLICATION DATE) -->
+    <div class="virtual-age-bar" id="vAgeBar">
+      <div class="vab-left">
+        <span class="vab-icon">🎂</span>
+        <div>
+          <div class="vab-title">Virtual Age Calculation (as on Application Date)</div>
+          <div class="vab-value" id="vabValue">—</div>
+        </div>
+      </div>
+      <div class="vab-right" id="vabRight"></div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="attach-section" id="attachSection" style="display:none">
+      <h4>📎 Attachments</h4>
+      <div class="attach-grid" id="attachGrid"></div>
+    </div>
+
+    <div class="foot">
+      <button class="m" onclick="withLoading(this, closeModal)">Cancel</button>
+      <button class="p" onclick="withLoading(this, save)">💾 Save Edits</button>
+      <button class="d" onclick="withLoading(this, del)">🗑️ Delete</button>
+      <button class="s" onclick="withLoading(this, verify)">✅ Verify &amp; Approve</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRAGGABLE IMAGE VIEWER -->
+<div class="overlay" id="viewerOv">
+  <div class="viewer-modal" id="viewerModal">
+    <div class="v-head" id="vHead">
+      <h3 id="vTitle">Document</h3>
+      <div class="v-tools">
+        <button onclick="zoom(-25)">−</button>
+        <span class="zoom-label" id="zoomLbl">100%</span>
+        <button onclick="zoom(25)">+</button>
+        <button onclick="zoomReset()">Fit</button>
+        <button onclick="openInTab()">↗ Open</button>
+        <button onclick="closeViewer()">✕</button>
+      </div>
+    </div>
+    <div class="v-body" id="vBody">
+      <iframe id="vFrame" src="about:blank" referrerpolicy="no-referrer"></iframe>
+      <div class="v-hint">Drag header to move · Drag image to pan</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==== GOOGLE APPS SCRIPT WEB APP ENDPOINT ==== */
+const API = 'https://script.google.com/macros/s/AKfycbwB1GWxHNY7hF8JDfA0xHnHooaTUje4r4WBvV50ckGUaTbhm37QweObOgU_vX5NXS8Y/exec';
+
+/* Local Storage Cache Key */
+const CACHE_KEY = 'PENSION_APP_DATA_V2';
+
+let H = [], CUR = null, ALL = [], VERIFIED_AADHAAR = new Set();
+let CURRENT_SYNC_TOKEN = '';
+let CURRENT_VIEW_URL = '';
+let CURRENT_ZOOM = 100;
+
+/* attachment columns (0-indexed) */
+const ATTACH_IDX = [28, 29, 30, 31, 32];
+const HIDDEN_FIELD_IDX = new Set([28, 29, 30, 31, 32]);
+
+let COL_DOB = -1;
+let COL_APP_DATE = -1;
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function toast(msg, type='info'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+function setSyncStatus(state, text){
+  const el = document.getElementById('syncStatus');
+  const txt = document.getElementById('syncText');
+  if (el) el.className = 'sync-status ' + state;
+  if (txt) txt.textContent = text;
+}
+
+async function withLoading(btn, fn){
+  if (!btn || btn.disabled) return;
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Please wait...';
+  try { await fn(); }
+  finally { btn.disabled = false; btn.innerHTML = original; }
+}
+
+async function api(action, extra = {}) {
+  const res = await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, ...extra }),
+    redirect: 'follow'
+  });
+  const text = await res.text();
+  let json;
+  try { json = JSON.parse(text); }
+  catch(e) { throw new Error('Bad server response: ' + text.slice(0, 200)); }
+  if (!json.ok) throw new Error(json.error || 'API error');
+  return json.data;
+}
+
+/* =========================================================
+   LOCAL STORAGE CACHE MANAGEMENT
+   ========================================================= */
+function loadFromLocalStorage(){
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const cache = JSON.parse(raw);
+    if (cache && Array.isArray(cache.headers) && Array.isArray(cache.rows)) {
+      cache.rows = cache.rows.filter(r => r && r.rowIndex != null && Array.isArray(r.data));
+      return cache;
+    }
+  } catch(e) {
+    console.warn('Cache read error:', e);
+  }
+  return null;
+}
+
+function saveToLocalStorage(){
+  try {
+    const cleanRows = ALL.filter(r => r && r.rowIndex != null && Array.isArray(r.data));
+    const payload = {
+      headers: H,
+      rows: cleanRows,
+      verifiedAadhaar: Array.from(VERIFIED_AADHAAR),
+      syncToken: CURRENT_SYNC_TOKEN,
+      savedAt: new Date().getTime()
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+  } catch(e) {
+    console.warn('Cache write error:', e);
+  }
+}
+
+/* =========================================================
+   FAST INITIALIZATION & SYNC LOGIC
+   ========================================================= */
+async function init(){
+  const cached = loadFromLocalStorage();
+  if (cached && cached.rows && cached.rows.length > 0){
+    H = cached.headers || [];
+    ALL = cached.rows;
+    VERIFIED_AADHAAR = new Set(cached.verifiedAadhaar || []);
+    CURRENT_SYNC_TOKEN = cached.syncToken || '';
+    detectSpecialColumns();
+    buildFilters();
+    applyFilters();
+    setSyncStatus('ok', '⚡ Instant Cache');
+  } else {
+    document.getElementById('tbl').textContent = 'Connecting to server...';
+    setSyncStatus('syncing', 'Connecting...');
+  }
+
+  await syncData(false);
+}
+
+async function syncData(isManual = false){
+  setSyncStatus('syncing', isManual ? 'Syncing...' : 'Checking sync...');
+  try {
+    const res = await api('sync', { syncToken: CURRENT_SYNC_TOKEN });
+
+    if (res && res.unchanged){
+      setSyncStatus('ok', '✅ Synced (Up to date)');
+      if (isManual) toast('Data is completely up to date', 'ok');
+      return;
+    }
+
+    if (res && res.headers && res.rows){
+      H = res.headers;
+      ALL = (res.rows || []).filter(r => r && r.rowIndex != null && Array.isArray(r.data));
+      VERIFIED_AADHAAR = new Set(res.verifiedAadhaar || []);
+      CURRENT_SYNC_TOKEN = res.syncToken || '';
+      detectSpecialColumns();
+      buildFilters();
+      applyFilters();
+      saveToLocalStorage();
+
+      setSyncStatus('ok', `✅ Synced (${ALL.length} rows)`);
+      if (isManual) toast(`Synced ${ALL.length} records successfully`, 'ok');
+    }
+  } catch(e) {
+    console.error('Sync error:', e);
+    if (ALL.length > 0){
+      setSyncStatus('err', '⚠️ Offline Mode');
+      toast('Server unreachable, using local cached data', 'info');
+    } else {
+      document.getElementById('tbl').innerHTML =
+        '<div style="padding:40px;text-align:center;color:#d93025">'+esc(e.message)+'</div>';
+      setSyncStatus('err', 'Sync Failed');
+      toast(e.message, 'err');
+    }
+  }
+}
+
+function manualSync(btn){
+  withLoading(btn, async () => {
+    await syncData(true);
+  });
+}
+
+function detectSpecialColumns(){
+  COL_DOB = -1;
+  COL_APP_DATE = -1;
+  let dateCol = -1, timeCol = -1;
+
+  H.forEach((h, i) => {
+    const s = String(h || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (s.includes('dob') || s.includes('birth') || s.includes('dateofbirth') || s.includes('janmatithi')) {
+      COL_DOB = i;
+    } else if (s.includes('applicationdate') || s.includes('applydate') || s.includes('dateofapplication') || s.includes('entrydate')) {
+      COL_APP_DATE = i;
+    } else if (s === 'date') {
+      dateCol = i;
+    } else if (s.includes('timestamp') || s.includes('time')) {
+      timeCol = i;
+    }
+  });
+
+  if (COL_APP_DATE === -1) {
+    COL_APP_DATE = dateCol !== -1 ? dateCol : timeCol;
+  }
+}
+
+/* Check non-editable fields: Aadhaar Number, TimeStamp, Date, User */
+function isNonEditableField(header, index){
+  const s = String(header || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (s.includes('aadhaar') || s.includes('aadhar') || index === 0) return true;
+  if (s.includes('timestamp') || s === 'time' || s === 'entrytime') return true;
+  if ((s === 'date' || s === 'appdate' || s === 'applicationdate' || s === 'submissiondate' || s === 'entrydate') && !s.includes('birth') && !s.includes('dob')) return true;
+  if (s === 'user' || s.includes('username') || s.includes('userid') || s.includes('createdby') || s.includes('operator')) return true;
+  return false;
+}
+
+/* Check fields that show small green length count: Aadhaar Number, Account No, Mobile No */
+function hasGreenCountBadge(header, index){
+  const s = String(header || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (s.includes('aadhaar') || s.includes('aadhar') || index === 0) return true;
+  if (s.includes('account') || s.includes('acno') || s.includes('accno') || s.includes('bankacc') || s.includes('bankac')) return true;
+  if (s.includes('mobile') || s.includes('phone') || s.includes('contact') || index === 25) return true;
+  return false;
+}
+
+function isDobColumn(header, index){
+  if (index === COL_DOB) return true;
+  const s = String(header || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  return s.includes('dob') || s.includes('birth') || s.includes('dateofbirth');
+}
+
+function isAppDateColumn(header, index){
+  if (index === COL_APP_DATE) return true;
+  const s = String(header || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  return (s.includes('applicationdate') || s.includes('applydate') || s === 'date') && !s.includes('birth') && !s.includes('dob');
+}
+
+/* Robust Date Parser for DD/MM/YYYY, YYYY-MM-DD, etc. */
+function parseAnyDate(val){
+  if (!val) return null;
+  if (val instanceof Date && !isNaN(val.getTime())) return val;
+  const s = String(val).trim();
+  if (!s) return null;
+
+  let m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
+  if (m){
+    const d = new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+  if (m){
+    const d = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  const std = new Date(s);
+  if (!isNaN(std.getTime())) return std;
+  return null;
+}
+
+/* Calculate exact age as of reference date */
+function computeExactAge(dobVal, appDateVal){
+  const dob = parseAnyDate(dobVal);
+  const ref = parseAnyDate(appDateVal) || new Date();
+
+  if (!dob) return { ok: false, text: 'Provide Date of Birth' };
+  if (ref < dob) return { ok: false, text: 'DOB is after Application Date (Invalid)' };
+
+  let years = ref.getFullYear() - dob.getFullYear();
+  let months = ref.getMonth() - dob.getMonth();
+  let days = ref.getDate() - dob.getDate();
+
+  if (days < 0){
+    months -= 1;
+    const prevMonthDays = new Date(ref.getFullYear(), ref.getMonth(), 0).getDate();
+    days += prevMonthDays;
+  }
+  if (months < 0){
+    years -= 1;
+    months += 12;
+  }
+
+  const shortTag = `${years} Y ${months} M`;
+  const fullText = `${years} Years, ${months} Months, ${days} Days`;
+  const isSenior = years >= 60;
+  const refStr = `${String(ref.getDate()).padStart(2, '0')}/${String(ref.getMonth() + 1).padStart(2, '0')}/${ref.getFullYear()}`;
+
+  return { ok: true, years, months, days, shortTag, fullText, isSenior, refStr };
+}
+
+/* Live recalculate age in the modal */
+function recalculateModalAge(){
+  const dobInput = COL_DOB !== -1 ? document.querySelector(`#grid input[data-i="${COL_DOB}"]`) : null;
+  const appDateInput = COL_APP_DATE !== -1 ? document.querySelector(`#grid input[data-i="${COL_APP_DATE}"]`) : null;
+
+  const dobVal = dobInput ? dobInput.value : '';
+  const appDateVal = appDateInput ? appDateInput.value : '';
+
+  const age = computeExactAge(dobVal, appDateVal);
+  const vVal = document.getElementById('vabValue');
+  const vRight = document.getElementById('vabRight');
+  const dobTag = document.getElementById('tag-dob-age');
+  const appTag = document.getElementById('tag-app-ref');
+
+  if (age.ok){
+    if (vVal) vVal.textContent = age.fullText;
+    if (vRight) {
+      vRight.innerHTML = `
+        <span class="tiny-tag age ${age.isSenior ? 'ok' : 'warn'}">
+          ${age.isSenior ? '✅ Eligible Senior (≥ 60 Y)' : '⚠️ Age < 60 Years'}
+        </span>
+        <span class="tiny-tag ref">📅 Ref: ${age.refStr}</span>
+      `;
+    }
+    if (dobTag){
+      dobTag.textContent = `🎂 Age: ${age.shortTag}`;
+      dobTag.className = `tiny-tag age ${age.isSenior ? 'ok' : 'warn'}`;
+    }
+    if (appTag){
+      appTag.textContent = `Ref: ${age.refStr}`;
+    }
+  } else {
+    if (vVal) vVal.textContent = age.text;
+    if (vRight) vRight.innerHTML = `<span class="tiny-tag ref">DOB / App Date required</span>`;
+    if (dobTag){
+      dobTag.textContent = '🎂 Age: —';
+      dobTag.className = 'tiny-tag age';
+    }
+  }
+}
+
+/* Live field length count update */
+function handleFieldInput(idx, val){
+  const cntEl = document.getElementById('cnt-' + idx);
+  if (cntEl) cntEl.textContent = String(val || '').length;
+
+  if (idx === COL_DOB || idx === COL_APP_DATE){
+    recalculateModalAge();
+  }
+}
+
+function isVerified(row){
+  if (!row || !Array.isArray(row.data)) return false;
+  const aad = String(row.data[0] || '').trim();
+  return aad && VERIFIED_AADHAAR.has(aad);
+}
+
+function buildFilters(){
+  const ifscs = new Set(), gps = new Set();
+  ALL.forEach(r => {
+    if (!r || !Array.isArray(r.data)) return;
+    if (r.data[26]) ifscs.add(String(r.data[26]).trim());
+    if (r.data[21]) gps.add(String(r.data[21]).trim());
+  });
+  const iSel = document.getElementById('fIFSC');
+  const gSel = document.getElementById('fGP');
+  if (!iSel || !gSel) return;
+  const curI = iSel.value, curG = gSel.value;
+  iSel.innerHTML = '<option value="">All IFSC</option>' +
+    [...ifscs].sort().map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  gSel.innerHTML = '<option value="">All GP / Ward</option>' +
+    [...gps].sort().map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  iSel.value = curI; gSel.value = curG;
+}
+
+function searchBtn(btn){ withLoading(btn, async () => applyFilters()); }
+function resetBtn(btn){
+  withLoading(btn, async () => {
+    document.getElementById('q').value = '';
+    document.getElementById('fIFSC').value = '';
+    document.getElementById('fGP').value = '';
+    applyFilters();
+  });
+}
+
+function applyFilters(){
+  const qEl = document.getElementById('q');
+  const q    = qEl ? qEl.value.toLowerCase().trim() : '';
+  const ifscEl = document.getElementById('fIFSC');
+  const ifsc = ifscEl ? ifscEl.value : '';
+  const gpEl = document.getElementById('fGP');
+  const gp   = gpEl ? gpEl.value : '';
+
+  const pendingOnly = ALL.filter(r => r && Array.isArray(r.data) && !isVerified(r));
+  const filtered = pendingOnly.filter(r => {
+    if (!r || !Array.isArray(r.data)) return false;
+    if (ifsc && String(r.data[26]||'').trim() !== ifsc) return false;
+    if (gp   && String(r.data[21]||'').trim() !== gp)   return false;
+    if (q    && !r.data.some(v => String(v || '').toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  updateCounters(pendingOnly.length);
+  render(filtered);
+}
+
+function updateCounters(pending){
+  const total    = ALL.length;
+  const verified = Math.max(0, total - pending);
+  const cT = document.getElementById('cTotal');
+  const cP = document.getElementById('cPending');
+  const cV = document.getElementById('cVerified');
+  const hT = document.getElementById('hTotal');
+  const hP = document.getElementById('hPending');
+
+  if (cT) cT.textContent = total;
+  if (cP) cP.textContent = pending;
+  if (cV) cV.textContent = verified;
+  if (hT) hT.textContent = total;
+  if (hP) hP.textContent = pending;
+}
+
+function render(rows){
+  const tbl = document.getElementById('tbl');
+  if (!tbl) return;
+  if (!rows || !rows.length){
+    tbl.innerHTML =
+      '<div style="padding:45px;text-align:center;color:#666;font-size:14.5px">No pending records match your filters.</div>';
+    return;
+  }
+  let h = '<table><thead><tr><th>Row</th><th>Aadhaar</th><th>Name</th><th>Mobile</th><th>Village</th><th>GP/Ward</th><th>IFSC</th><th>Action</th></tr></thead><tbody>';
+  rows.forEach(r => {
+    if (!r || r.rowIndex == null || !Array.isArray(r.data)) return;
+    const d = r.data;
+    const name = [d[5], d[6], d[7]].filter(Boolean).join(' ') || '-';
+    const aadhaar = String(d[0] || '').trim();
+    const mobile = String(d[25] || '').trim();
+
+    h += `<tr id="row-${r.rowIndex}">
+      <td>${r.rowIndex}</td>
+      <td>
+        <b>${esc(aadhaar)}</b>
+        ${aadhaar ? `<span class="cnt-badge" style="margin-left:6px">${aadhaar.length}</span>` : ''}
+      </td>
+      <td>${esc(name)}</td>
+      <td>
+        ${esc(mobile)}
+        ${mobile ? `<span class="cnt-badge" style="margin-left:6px">${mobile.length}</span>` : ''}
+      </td>
+      <td>${esc(d[22])}</td>
+      <td>${esc(d[21])}</td>
+      <td>${esc(d[26])}</td>
+      <td><button class="s" onclick="openRowBtn(this, ${r.rowIndex})">Verify</button></td>
+    </tr>`;
+  });
+  tbl.innerHTML = h + '</tbody></table>';
+}
+
+/* -------- modal -------- */
+function openRowBtn(btn, i){
+  withLoading(btn, () => openRow(i));
+}
+
+async function openRow(i){
+  if (i == null) return;
+  try {
+    let rowObj = ALL.find(x => x && x.rowIndex === i);
+    let rowData = (rowObj && Array.isArray(rowObj.data)) ? rowObj.data.slice() : null;
+
+    if (!rowData || !H.length){
+      const res = await api('get', { row: i });
+      if (res && res.headers) H = res.headers;
+      if (res && Array.isArray(res.data)) rowData = res.data;
+    }
+
+    if (!rowData) throw new Error('Row #' + i + ' data could not be retrieved.');
+
+    CUR = { rowIndex: i, data: rowData.slice() };
+    detectSpecialColumns();
+
+    // Fields — SKIP attachment path columns
+    document.getElementById('grid').innerHTML = H.map((h, k) => {
+      if (HIDDEN_FIELD_IDX.has(k)) return '';
+
+      const val = CUR.data[k] != null ? String(CUR.data[k]) : '';
+      const isReadOnly = isNonEditableField(h, k);
+      const showCount = hasGreenCountBadge(h, k);
+      const isDob = isDobColumn(h, k);
+      const isApp = isAppDateColumn(h, k);
+
+      return `
+        <label>
+          <div class="lbl-row">
+            <span class="lbl-text" title="${esc(h)}">${esc(h)}</span>
+            <div class="lbl-badges">
+              ${showCount ? `<span class="cnt-badge" id="cnt-${k}" title="Length: ${val.length}">${val.length}</span>` : ''}
+              ${isDob ? `<span class="tiny-tag age" id="tag-dob-age">🎂 Age</span>` : ''}
+              ${isApp ? `<span class="tiny-tag ref" id="tag-app-ref">Ref Date</span>` : ''}
+              ${isReadOnly ? `<span class="tiny-tag ro" title="Non-editable field">🔒 Locked</span>` : ''}
+            </div>
+          </div>
+          <input
+            data-i="${k}"
+            value="${esc(val)}"
+            ${isReadOnly ? 'readonly class="readonly-input"' : ''}
+            oninput="handleFieldInput(${k}, this.value)"
+          />
+        </label>
+      `;
+    }).join('');
+
+    document.getElementById('mtitle').textContent = 'Verify Row #' + i;
+
+    // Recalculate virtual age right away
+    recalculateModalAge();
+
+    // Attachments
+    buildAttachments(CUR.data);
+
+    document.getElementById('ov').classList.add('on');
+  } catch(e){ toast(e.message, 'err'); }
+}
+
+/* -------- attachments -------- */
+async function buildAttachments(data){
+  const sec = document.getElementById('attachSection');
+  const grid = document.getElementById('attachGrid');
+  if (!sec || !grid) return;
+
+  const paths = ATTACH_IDX.map(i => String(data[i] || '').trim());
+  const hasAny = paths.some(p => p);
+  if (!hasAny){
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = 'block';
+  grid.innerHTML = '<div style="grid-column:1/-1;color:#5f6368;font-size:12px">Loading attachments…</div>';
+
+  try {
+    const files = await api('files', { files: paths });
+    grid.innerHTML = files.map((f, i) => {
+      const label = H[ATTACH_IDX[i]] || 'Attachment';
+      if (!f.found){
+        return `<div class="attach-row">
+          <div class="doc">
+            <div class="docname">${esc(label)}</div>
+            <div class="docmeta">File not found in PENSION_DATA_Images</div>
+          </div>
+          <span class="pill miss">Missing</span>
+        </div>`;
+      }
+      return `<div class="attach-row found">
+        <div class="doc">
+          <div class="docname">${esc(label)}</div>
+          <div class="docmeta">${esc(f.name)}</div>
+        </div>
+        <span class="pill ok">Ready</span>
+        <button class="p" onclick="openViewer('${esc(f.preview)}', '${esc(f.view)}', '${esc(label)}')">👁 View</button>
+      </div>`;
+    }).join('');
+  } catch(e){
+    grid.innerHTML = `<div style="grid-column:1/-1;color:#d93025;font-size:12px">Error loading files: ${esc(e.message)}</div>`;
+  }
+}
+
+/* -------- DRAGGABLE VIEWER -------- */
+let dragState = null;
+let panState  = null;
+
+function openViewer(previewUrl, viewUrl, title){
+  CURRENT_VIEW_URL = viewUrl;
+  CURRENT_ZOOM = 100;
+
+  const modal = document.getElementById('viewerModal');
+  modal.style.top  = '60px';
+  modal.style.left = '50%';
+  modal.style.transform = 'translateX(-50%)';
+
+  document.getElementById('vTitle').textContent = title || 'Document';
+  const frame = document.getElementById('vFrame');
+  frame.src = previewUrl;
+  frame.style.transform = 'translate(0px, 0px) scale(1)';
+  document.getElementById('zoomLbl').textContent = '100%';
+
+  document.getElementById('viewerOv').classList.add('on');
+}
+
+function closeViewer(){
+  document.getElementById('viewerOv').classList.remove('on');
+  document.getElementById('vFrame').src = 'about:blank';
+}
+
+function zoom(delta){
+  CURRENT_ZOOM = Math.min(400, Math.max(50, CURRENT_ZOOM + delta));
+  applyZoom();
+}
+function zoomReset(){
+  CURRENT_ZOOM = 100;
+  const frame = document.getElementById('vFrame');
+  frame.style.transform = 'translate(0px, 0px) scale(1)';
+  document.getElementById('zoomLbl').textContent = '100%';
+}
+function applyZoom(){
+  const frame = document.getElementById('vFrame');
+  const z = CURRENT_ZOOM / 100;
+  const cur = getTranslate_(frame);
+  frame.style.transform = `translate(${cur.x}px, ${cur.y}px) scale(${z})`;
+  document.getElementById('zoomLbl').textContent = CURRENT_ZOOM + '%';
+}
+
+function getTranslate_(el){
+  const t = el.style.transform || '';
+  const m = t.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+  return m ? { x: parseFloat(m[1]) || 0, y: parseFloat(m[2]) || 0 } : { x: 0, y: 0 };
+}
+
+function openInTab(){
+  if (CURRENT_VIEW_URL) window.open(CURRENT_VIEW_URL, '_blank', 'noopener');
+}
+
+/* --- Drag viewer by header --- */
+const vHead = document.getElementById('vHead');
+vHead.addEventListener('mousedown', e => {
+  if (e.target.closest('button')) return;
+  const modal = document.getElementById('viewerModal');
+  const rect = modal.getBoundingClientRect();
+  dragState = {
+    startX: e.clientX,
+    startY: e.clientY,
+    left: rect.left,
+    top: rect.top
+  };
+  modal.style.left = rect.left + 'px';
+  modal.style.top  = rect.top + 'px';
+  modal.style.transform = 'none';
+  modal.classList.add('dragging');
+  vHead.classList.add('dragging');
+  e.preventDefault();
+});
+
+/* --- Pan viewer frame --- */
+const vBody = document.getElementById('vBody');
+vBody.addEventListener('mousedown', e => {
+  const frame = document.getElementById('vFrame');
+  const t = getTranslate_(frame);
+  panState = {
+    startX: e.clientX,
+    startY: e.clientY,
+    baseX: t.x,
+    baseY: t.y
+  };
+  vBody.classList.add('panning');
+});
+
+document.addEventListener('mousemove', e => {
+  if (dragState){
+    const dx = e.clientX - dragState.startX;
+    const dy = e.clientY - dragState.startY;
+    const modal = document.getElementById('viewerModal');
+    modal.style.left = (dragState.left + dx) + 'px';
+    modal.style.top  = (dragState.top  + dy) + 'px';
+  }
+  if (panState){
+    const dx = e.clientX - panState.startX;
+    const dy = e.clientY - panState.startY;
+    const frame = document.getElementById('vFrame');
+    const z = CURRENT_ZOOM / 100;
+    frame.style.transform =
+      `translate(${panState.baseX + dx}px, ${panState.baseY + dy}px) scale(${z})`;
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (dragState){
+    dragState = null;
+    document.getElementById('viewerModal').classList.remove('dragging');
+    vHead.classList.remove('dragging');
+  }
+  panState = null;
+  vBody.classList.remove('panning');
+});
+
+/* -------- modal actions -------- */
+function collect(){
+  const a = new Array(H.length).fill('');
+  document.querySelectorAll('#grid input').forEach(inp => a[+inp.dataset.i] = inp.value);
+  return a;
+}
+function closeModal(){
+  document.getElementById('ov').classList.remove('on');
+  CUR = null;
+}
+
+/* OPTIMISTIC SAVE */
+async function save(){
+  if (!CUR || CUR.rowIndex == null) {
+    toast('No row is currently selected', 'err');
+    return;
+  }
+
+  const targetRow = CUR.rowIndex;
+  const data = CUR.data.slice();
+  document.querySelectorAll('#grid input').forEach(inp => data[+inp.dataset.i] = inp.value);
+
+  CUR.data = data;
+  const local = ALL.find(x => x && x.rowIndex === targetRow);
+  if (local) local.data = data;
+
+  saveToLocalStorage();
+  applyFilters();
+  buildFilters();
+
+  try {
+    const msg = await api('update', { row: targetRow, data });
+    toast('✅ ' + msg, 'ok');
+  } catch(e){ toast(e.message, 'err'); }
+}
+
+/* OPTIMISTIC VERIFY */
+async function verify(){
+  if (!CUR || CUR.rowIndex == null) {
+    toast('No row is currently selected', 'err');
+    return;
+  }
+
+  const targetRow = CUR.rowIndex;
+  const data = CUR.data.slice();
+  document.querySelectorAll('#grid input').forEach(inp => data[+inp.dataset.i] = inp.value);
+
+  if (!confirm('Verify row #' + targetRow + ' and copy to "Verified Data"?')) return;
+
+  const aad = String(data[0] || '').trim();
+  const rowEl = document.getElementById('row-' + targetRow);
+
+  if (rowEl){
+    rowEl.classList.add('verified-hide');
+    await new Promise(res => setTimeout(res, 450));
+  }
+
+  if (aad) VERIFIED_AADHAAR.add(aad);
+  saveToLocalStorage();
+  closeModal(); // safely closes modal and resets CUR AFTER capturing targetRow
+  applyFilters();
+
+  try {
+    const msg = await api('verify', { row: targetRow, data });
+    toast('✅ ' + msg, 'ok');
+  } catch(e){
+    toast('Server error: ' + e.message, 'err');
+  }
+}
+
+/* OPTIMISTIC DELETE */
+async function del(){
+  if (!CUR || CUR.rowIndex == null) {
+    toast('No row is currently selected', 'err');
+    return;
+  }
+
+  const targetRow = CUR.rowIndex;
+  if (!confirm('Delete row #' + targetRow + ' permanently?')) return;
+
+  const rowEl = document.getElementById('row-' + targetRow);
+  if (rowEl){
+    rowEl.classList.add('verified-hide');
+    await new Promise(res => setTimeout(res, 450));
+  }
+
+  ALL = ALL.filter(x => x && x.rowIndex !== targetRow);
+  saveToLocalStorage();
+  closeModal(); // safely closes modal and resets CUR AFTER capturing targetRow
+  applyFilters();
+  buildFilters();
+
+  try {
+    const msg = await api('delete', { row: targetRow });
+    toast('🗑️ ' + msg, 'info');
+  } catch(e){
+    toast('Server error: ' + e.message, 'err');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
