@@ -139,7 +139,7 @@ main.width-ultra{max-width:98vw}
   border-radius:18px;
   box-shadow:0 15px 35px rgba(25,57,93,0.07);
 }
-.auth-panel h2{margin:0 0 6px;color:var(--navy);font-size:22px;display:flex;align-items:center;gap:8px}
+.auth-panel h2{margin:0 0 6px;color:var(--navy);font-size:22px}
 .sub{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.4}
 .field{margin:15px 0}
 .field label{display:block;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--navy)}
@@ -244,9 +244,7 @@ main.width-ultra{max-width:98vw}
 .module-card p{flex:1;margin:0 0 20px;color:var(--muted);font-size:14px;line-height:1.45}
 .module-card button{width:100%}
 
-/* ========================================================== */
-/* ADVANCED IFRAME MODULE VIEWER & RESIZING SYSTEM */
-/* ========================================================== */
+/* Advanced Iframe Viewer */
 .viewer{
   display:none;
   margin-top:28px;
@@ -258,7 +256,6 @@ main.width-ultra{max-width:98vw}
 }
 .viewer.show{display:block}
 
-/* Fullscreen Mode */
 .viewer.is-fullscreen{
   position:fixed!important;
   inset:0!important;
@@ -303,7 +300,6 @@ main.width-ultra{max-width:98vw}
   gap:6px;
 }
 
-/* Dedicated Resize & Fit Toolbar */
 .viewer-toolbar{
   display:flex;
   flex-wrap:wrap;
@@ -359,7 +355,6 @@ main.width-ultra{max-width:98vw}
   cursor:pointer;
 }
 
-/* Iframe Stage & Zoom Scaling Box */
 .iframe-stage{
   position:relative;
   background:#cbd5e1;
@@ -384,7 +379,6 @@ main.width-ultra{max-width:98vw}
   background:#fff;
 }
 
-/* Interactive Drag-to-Resize Handle */
 .drag-resize-handle{
   background:linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
   color:#e2e8f0;
@@ -451,7 +445,7 @@ footer{
     <div class="brand-badge">B</div>
     <div class="brand">
       CHANCHAL-I DEV. BLOCK, MALDA
-      <small>Samarth · SOCIAL WELFARE SUITE</small>
+      <small>CHANCHAL · SOCIAL WELFARE SUITE</small>
     </div>
   </div>
   <div class="top-actions">
@@ -467,7 +461,6 @@ footer{
 
   <!-- AUTHENTICATION PANEL -->
   <section id="authPanel" class="auth-panel">
-    <!-- Sign In View -->
     <div id="signInView">
       <h2>Portal Login</h2>
       <p class="sub">Sign in with your authorized Panchayat credentials.</p>
@@ -496,7 +489,6 @@ footer{
       <p class="switch">New staff or operator? <button id="toSignUp" class="link" type="button">Create account</button></p>
     </div>
 
-    <!-- Sign Up View -->
     <div id="signUpView" class="hidden">
       <h2>Register Account</h2>
       <p class="sub">New registrations require Administrator approval before access is granted.</p>
@@ -563,39 +555,31 @@ footer{
       </article>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- ADVANCED RESIZABLE MODULE VIEWER (SOLVES IFRAME FIT ISSUE) -->
-    <!-- ========================================================= -->
+    <!-- MODULE VIEWER -->
     <section id="moduleViewer" class="viewer">
-      <!-- Title Header Bar -->
       <div class="viewer-head">
         <div class="viewer-head-title">
           <div class="pulse-dot"></div>
           <span id="viewerTitle">Module Workspace</span>
-          <small id="viewerUrlLabel" style="font-family:monospace;opacity:0.8;font-size:11px"></small>
         </div>
         <div class="viewer-actions">
-          <button id="openNewTabBtn" class="btn-outline btn-sm" type="button" title="Open full module in a separate browser tab">↗ Open in New Tab</button>
           <button id="reloadFrameBtn" class="btn-outline btn-sm" type="button" title="Reload iframe content">↻ Reload</button>
           <button id="printModuleBtn" class="btn-outline btn-sm" type="button" title="Print document">🖨️ Print</button>
           <button id="closeModule" class="btn-gold btn-sm" type="button">✕ Close</button>
         </div>
       </div>
 
-      <!-- Resizing & Fitting Toolbar -->
       <div class="viewer-toolbar">
-        <!-- Width Container Mode -->
         <div class="control-group">
           <span class="control-label">Width:</span>
           <div class="btn-group">
-            <button class="btn-tool" onclick="setWidthMode('standard')" id="btnWidthStandard" title="Boxed 1150px">Standard</button>
-            <button class="btn-tool active" onclick="setWidthMode('wide')" id="btnWidthWide" title="Wide 1480px - Recommended for wide forms">Wide</button>
-            <button class="btn-tool" onclick="setWidthMode('ultra')" id="btnWidthUltra" title="98% Viewport Width">Ultra-Wide</button>
-            <button class="btn-tool" onclick="toggleFullscreen()" id="btnWidthFull" title="True Fullscreen Viewport">⛶ Fullscreen</button>
+            <button class="btn-tool" onclick="setWidthMode('standard')" id="btnWidthStandard">Standard</button>
+            <button class="btn-tool active" onclick="setWidthMode('wide')" id="btnWidthWide">Wide</button>
+            <button class="btn-tool" onclick="setWidthMode('ultra')" id="btnWidthUltra">Ultra-Wide</button>
+            <button class="btn-tool" onclick="toggleFullscreen()" id="btnWidthFull">⛶ Fullscreen</button>
           </div>
         </div>
 
-        <!-- Height Adjustment Presets & Slider -->
         <div class="control-group">
           <span class="control-label">Height:</span>
           <div class="btn-group">
@@ -603,33 +587,30 @@ footer{
             <button class="btn-tool active" onclick="setHeightPreset(850)" id="h850">850px</button>
             <button class="btn-tool" onclick="setHeightPreset(1150)" id="h1150">1150px</button>
             <button class="btn-tool" onclick="setHeightPreset('full')" id="hFull">Fill Screen</button>
-            <button class="btn-tool" onclick="setHeightPreset('auto')" id="hAuto" title="Match child document scroll height">Auto Fit</button>
+            <button class="btn-tool" onclick="setHeightPreset('auto')" id="hAuto">Auto Fit</button>
           </div>
           <span id="heightValueDisplay" style="font-family:monospace;font-size:11px;color:#64748b">850px</span>
-          <input type="range" id="heightSlider" class="height-slider" min="450" max="2200" step="25" value="850" oninput="onSliderHeight(this.value)" title="Drag slider to set exact height">
+          <input type="range" id="heightSlider" class="height-slider" min="450" max="2200" step="25" value="850" oninput="onSliderHeight(this.value)">
         </div>
 
-        <!-- Zoom & Fit Controls -->
         <div class="control-group">
           <span class="control-label">Zoom:</span>
           <div class="btn-group">
-            <button class="btn-tool" onclick="adjustZoom(-10)" title="Zoom Out">−</button>
+            <button class="btn-tool" onclick="adjustZoom(-10)">−</button>
             <span id="zoomDisplay" class="zoom-display">100%</span>
-            <button class="btn-tool" onclick="adjustZoom(10)" title="Zoom In">+</button>
+            <button class="btn-tool" onclick="adjustZoom(10)">+</button>
           </div>
-          <button class="btn-tool" id="btnFitWidth" onclick="toggleFitWidth()" style="background:#fff;border:1px solid #cbd5e1" title="Scale down so wide tables never overflow horizontally">Fit to Width</button>
+          <button class="btn-tool" id="btnFitWidth" onclick="toggleFitWidth()" style="background:#fff;border:1px solid #cbd5e1">Fit to Width</button>
         </div>
       </div>
 
-      <!-- Stage & Iframe Wrapper -->
       <div id="iframeStage" class="iframe-stage" style="height:850px;">
         <div id="iframeZoomWrap" class="iframe-zoom-wrap">
           <iframe id="moduleFrame" title="Portal module viewer" src="about:blank"></iframe>
         </div>
       </div>
 
-      <!-- Drag to Resize Handle at Bottom -->
-      <div id="dragHandle" class="drag-resize-handle" title="Drag up or down to adjust iframe height smoothly">
+      <div id="dragHandle" class="drag-resize-handle">
         <span>↕ Drag border to resize height (<span id="dragHeightLabel">850px</span>)</span>
         <div class="drag-indicator">
           <div class="drag-pill"></div>
@@ -645,10 +626,9 @@ footer{
 </main>
 
 <footer>
-  Chanchal-I Dev Block · Malda District · Government of West Bengal ·
+  Chanchal-I Dev Block · Malda District · Government of West Bengal · 
 </footer>
 
-<!-- HIDDEN FORM & IFRAME FOR CROSS-DOMAIN GAS COMMUNICATION -->
 <iframe name="authResponseFrame" id="authResponseFrame" class="hidden" title="Authentication response iframe"></iframe>
 <form id="authForm" method="post" target="authResponseFrame" class="hidden">
   <input type="hidden" name="action" id="formAction">
@@ -659,11 +639,6 @@ footer{
 </form>
 
 <script>
-/**
- * BHAGABANPUR GP MANAGEMENT PORTAL CLIENT SCRIPT
- * Production build with Responsive Full-View Iframe Sizing Engine
- */
-
 const AUTH_API_URL = "https://script.google.com/macros/s/AKfycbw_FJVCJ_xzpyojnMfriSVUZ17PvyuMs4pR5uDjyoYmW5EGmidy6gyucJn5QNSCTzlw/exec";
 const DATA_ENTRY_URL = "./dataentry.htm";
 const VERIFICATION_URL = "./verification.htm";
@@ -673,7 +648,6 @@ let pendingAction = "";
 let requestTimeoutTimer = null;
 let currentModuleUrl = "";
 
-// Iframe sizing state
 let currentHeight = 850;
 let currentZoom = 100;
 let isFitWidth = false;
@@ -773,12 +747,10 @@ function submitAuth(action, data) {
   $("authForm").submit();
 }
 
-// Message listener for GAS Auth and Auto-Height
 window.addEventListener("message", event => {
   const payload = event.data;
   if (!payload) return;
 
-  // Auto-resize message from child module
   if (payload.type === "GP_MODULE_RESIZE" && payload.height) {
     if ($("hAuto").classList.contains("active")) {
       applyHeight(payload.height);
@@ -870,8 +842,7 @@ function openModule(url, title) {
   }
 
   currentModuleUrl = url;
-  $("viewerTitle").textContent = title + " Workspace — Chanchal Dev Block";
-  $("viewerUrlLabel").textContent = "(" + url + ")";
+  $("viewerTitle").textContent = title + " Workspace — CHANCHAL,MALDA";
   const frame = $("moduleFrame");
   frame.src = url;
 
@@ -885,9 +856,6 @@ function closeModule() {
   if (isFullscreen) toggleFullscreen();
 }
 
-// ==========================================================
-// IFRAME RESIZE, WIDTH, HEIGHT & ZOOM CONTROL FUNCTIONS
-// ==========================================================
 function setWidthMode(mode) {
   const main = $("mainContainer");
   main.className = "";
@@ -959,7 +927,6 @@ function applyHeight(h) {
   $("heightSlider").value = currentHeight;
 }
 
-// Drag to Resize Handle logic
 let isDragging = false;
 let startY = 0;
 let startHeight = 850;
@@ -986,7 +953,6 @@ window.addEventListener("mouseup", () => {
   }
 });
 
-// Zoom / Scale Controls
 function adjustZoom(delta) {
   currentZoom = Math.max(70, Math.min(130, currentZoom + delta));
   applyZoom();
@@ -1007,11 +973,6 @@ function applyZoom() {
   $("iframeZoomWrap").style.transform = currentZoom === 100 ? "none" : `scale(${currentZoom / 100})`;
 }
 
-// Toolbar Action Buttons
-$("openNewTabBtn").addEventListener("click", () => {
-  if (currentModuleUrl) window.open(currentModuleUrl, "_blank");
-});
-
 $("reloadFrameBtn").addEventListener("click", () => {
   if (currentModuleUrl) {
     const frame = $("moduleFrame");
@@ -1023,9 +984,7 @@ $("reloadFrameBtn").addEventListener("click", () => {
 $("printModuleBtn").addEventListener("click", () => {
   try {
     $("moduleFrame").contentWindow.print();
-  } catch(e) {
-    window.open(currentModuleUrl, "_blank");
-  }
+  } catch(e) {}
 });
 
 function setupPasswordToggle(toggleId, inputId) {
@@ -1076,7 +1035,6 @@ $("closeModule").addEventListener("click", closeModule);
   });
 });
 
-// Restore session on refresh
 const existingUser = getCurrentUser();
 if (existingUser) {
   renderDashboard(existingUser);
