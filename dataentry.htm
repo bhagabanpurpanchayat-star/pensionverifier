@@ -12,14 +12,17 @@
           border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
   label { display: block; font-size: 13px; margin-bottom: 4px; font-weight: 600; color: #333; }
+  label .req { color: #dc3545; margin-left: 2px; }
   input, select { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
   input:focus, select:focus { outline: none; border-color: #1a73e8; }
+  input.invalid, select.invalid { border-color: #dc3545; background: #fff5f5; }
   .actions { margin-top: 20px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
   button { padding: 10px 28px; font-size: 15px; background: #1a73e8; color: #fff;
            border: none; border-radius: 4px; cursor: pointer; }
   button.secondary { background: #6c757d; }
   button:disabled { background: #999; cursor: not-allowed; }
   #msg { text-align: center; margin-top: 12px; font-size: 14px; }
+  #msg.error { color: #dc3545; font-weight: 600; }
   #status { text-align: center; margin-top: 6px; font-size: 12px; color: #666; }
   .hidden { display: none !important; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -37,7 +40,7 @@
 <h2>PENSION_DATA</h2>
 
 <div class="card">
-  <form id="pensionForm">
+  <form id="pensionForm" novalidate>
     <div class="grid" id="formGrid"></div>
     <div class="actions">
       <button type="submit" id="submitBtn">Save Locally &amp; Sync</button>
@@ -169,8 +172,12 @@ function buildForm(dropdownData) {
     const wrap = document.createElement('div');
     wrap.dataset.field = h;
     const label = document.createElement('label');
-    label.textContent = h;
     label.setAttribute('for', h);
+    label.textContent = h;
+    const req = document.createElement('span');
+    req.className = 'req';
+    req.textContent = '*';
+    label.appendChild(req);
 
     let input;
     if (STATIC_OPTIONS[h] || DROPDOWN_MAP[h]) {
@@ -192,6 +199,10 @@ function buildForm(dropdownData) {
       if (input.type === 'number') input.step = 'any';
     }
 
+    /* Clear invalid state as soon as the user fixes the field */
+    input.addEventListener('input', () => { input.classList.remove('invalid'); });
+    input.addEventListener('change', () => { input.classList.remove('invalid'); });
+
     wrap.appendChild(label);
     wrap.appendChild(input);
     grid.appendChild(wrap);
@@ -208,7 +219,10 @@ function toggleCasteCert() {
   const input = document.getElementById('Caste Certificate No.');
   const show = (caste === 'SC' || caste === 'ST');
   wrap.classList.toggle('hidden', !show);
-  if (!show) input.value = '';
+  if (!show) {
+    input.value = '';
+    input.classList.remove('invalid');
+  }
 }
 
 function loadDropdowns() {
@@ -219,6 +233,62 @@ function loadDropdowns() {
       console.warn('Dropdown load failed', err);
       buildForm({});
     });
+}
+
+/* ---------- Validation (mandatory fields) ---------- */
+
+function isFieldVisible(header) {
+  if (header === 'Caste Certificate No.') {
+    const casteEl = document.getElementById('Caste');
+    const caste = casteEl ? casteEl.value : '';
+    return caste === 'SC' || caste === 'ST';
+  }
+  return true;
+}
+
+function validateForm() {
+  const invalidFields = [];
+
+  FORM_FIELDS.forEach(h => {
+    const el = document.getElementById(h);
+    if (!el) return;
+
+    /* Skip hidden conditional fields */
+    if (!isFieldVisible(h)) {
+      el.classList.remove('invalid');
+      return;
+    }
+
+    const val = (el.value || '').trim();
+    if (!val) {
+      el.classList.add('invalid');
+      invalidFields.push(h);
+      return;
+    }
+
+    /* Field-specific format checks */
+    if (h === 'Aadhaar Number' && !/^\d{12}$/.test(val)) {
+      el.classList.add('invalid');
+      invalidFields.push(h + ' (12 digits)');
+      return;
+    }
+
+    if (h === 'Pin Code' && !/^\d{6}$/.test(val)) {
+      el.classList.add('invalid');
+      invalidFields.push(h + ' (6 digits)');
+      return;
+    }
+
+    if (h === 'Mobile No' && !/^\d{10}$/.test(val)) {
+      el.classList.add('invalid');
+      invalidFields.push(h + ' (10 digits)');
+      return;
+    }
+
+    el.classList.remove('invalid');
+  });
+
+  return invalidFields;
 }
 
 /* ---------- Local save + background sync ---------- */
@@ -239,13 +309,27 @@ function collectForm() {
 
 document.getElementById('pensionForm').addEventListener('submit', function(e) {
   e.preventDefault();
+
+  const msgEl = document.getElementById('msg');
+  msgEl.classList.remove('error');
+
+  /* ---- Mandatory field validation: block save until all filled ---- */
+  const invalid = validateForm();
+  if (invalid.length) {
+    msgEl.classList.add('error');
+    msgEl.textContent = 'Please fill all required fields correctly: ' + invalid.join(', ');
+    const firstInvalid = document.querySelector('.invalid');
+    if (firstInvalid) firstInvalid.focus();
+    return;
+  }
+
   const data = collectForm();
   const row = { id: uid(), status: 'pending', attempts: 0, ts: Date.now(), data };
   const q = getQueue();
   q.push(row);
   setQueue(q);
 
-  document.getElementById('msg').textContent = 'Saved locally. Syncing in background...';
+  msgEl.textContent = 'Saved locally. Syncing in background...';
   document.getElementById('pensionForm').reset();
   toggleCasteCert();
   renderMergedRecords();
