@@ -42,7 +42,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:10px 5%;
+  padding:12px 5%;
   box-shadow:0 4px 20px rgba(16,43,78,0.15);
   border-bottom:2px solid var(--gold);
 }
@@ -77,7 +77,11 @@ body{
   font-weight:500;
   letter-spacing:1.5px;
 }
-.top-actions{display:flex;align-items:center;gap:10px}
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
 button{
   border:0;
   border-radius:8px;
@@ -103,8 +107,14 @@ button:disabled{opacity:.65;cursor:not-allowed}
 .btn-sm{padding:6px 12px;font-size:12px;border-radius:6px}
 
 /* Main */
-main{max-width:1100px;margin:32px auto;padding:0 20px;flex:1;width:100%}
-.welcome{text-align:center;margin:20px 0 30px}
+main{
+  max-width:1100px;
+  margin:36px auto;
+  padding:0 20px;
+  flex:1;
+  width:100%;
+}
+.welcome{text-align:center;margin:10px 0 28px}
 .welcome h1{margin:0 0 8px;color:var(--navy);font-size:clamp(24px,4vw,34px);font-weight:800}
 .welcome p{margin:0;color:var(--muted);font-size:15px}
 
@@ -160,14 +170,11 @@ main{max-width:1100px;margin:32px auto;padding:0 20px;flex:1;width:100%}
   border-radius:8px;
   font-size:13px;
   line-height:1.45;
-  animation:fadeIn 0.25s ease;
 }
 .message.show{display:block}
 .message.error{background:var(--error-bg);color:var(--error-text);border:1px solid #fecaca}
 .message.success{background:var(--success-bg);color:var(--success-text);border:1px solid #a7f3d0}
 .message.warning{background:var(--warning-bg);color:var(--warning-text);border:1px solid #fde68a}
-
-@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 
 /* Dashboard */
 .dashboard{display:none}
@@ -210,9 +217,7 @@ main{max-width:1100px;margin:32px auto;padding:0 20px;flex:1;width:100%}
   border:1px solid var(--line);
   border-radius:16px;
   box-shadow:0 8px 24px rgba(25,57,93,0.05);
-  transition:all 0.2s ease;
 }
-.module-card:hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(25,57,93,0.09)}
 .module-icon{
   display:grid;
   width:52px;
@@ -225,7 +230,7 @@ main{max-width:1100px;margin:32px auto;padding:0 20px;flex:1;width:100%}
   font-size:26px;
 }
 .module-card h3{margin:0 0 8px;color:var(--navy);font-size:20px}
-.module-card p{flex:1;margin:0 0 22px;color:var(--muted);font-size:14px;line-height:1.4}
+.module-card p{flex:1;margin:0 0 22px;color:var(--muted);font-size:14px}
 .module-card button{width:100%}
 
 /* Viewer */
@@ -248,47 +253,7 @@ main{max-width:1100px;margin:32px auto;padding:0 20px;flex:1;width:100%}
   color:#fff;
   font-weight:700;
 }
-.viewer-actions{display:flex;align-items:center;gap:10px}
-.viewer iframe{display:block;width:100%;height:calc(100vh - 220px);min-height:550px;border:0;background:#fafafa}
-
-/* Settings & Diagnostics Bar */
-.config-bar{
-  margin-top:30px;
-  padding:14px 18px;
-  background:#fff;
-  border:1px dashed #cbd5e1;
-  border-radius:10px;
-  font-size:12px;
-  color:var(--muted);
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-.config-bar code{background:#f1f5f9;padding:3px 8px;border-radius:4px;color:var(--navy);font-family:monospace;word-break:break-all}
-
-/* Modal */
-.modal-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(10,28,51,0.6);
-  backdrop-filter:blur(3px);
-  display:none;
-  place-items:center;
-  z-index:999;
-  padding:20px;
-}
-.modal-overlay.show{display:grid}
-.modal{
-  background:#fff;
-  border-radius:16px;
-  max-width:540px;
-  width:100%;
-  padding:24px;
-  box-shadow:0 20px 40px rgba(0,0,0,0.2);
-}
-.modal h3{margin:0 0 10px;color:var(--navy)}
+.viewer iframe{display:block;width:100%;height:calc(100vh - 220px);min-height:550px;border:0}
 
 footer{
   padding:24px 10px;
@@ -301,10 +266,9 @@ footer{
 .hidden{display:none!important}
 
 @media(max-width:650px){
-  .topbar{padding:10px 14px}
+  .topbar{padding:12px 16px}
   .brand{font-size:14px}
-  .top-actions button{padding:8px 10px;font-size:12px}
-  main{margin:18px auto}
+  main{margin:20px auto}
   .modules{grid-template-columns:1fr}
   .user-strip{flex-direction:column;align-items:flex-start}
   .viewer iframe{height:75vh;min-height:420px}
@@ -323,9 +287,6 @@ footer{
     </div>
   </div>
   <div class="top-actions">
-    <button id="headerSignIn" class="btn-outline" type="button">Sign In</button>
-    <button id="headerSignUp" class="btn-gold" type="button">Sign Up</button>
-    <button id="headerSettings" class="btn-outline" type="button" title="Configure Web App URL">⚙ Settings</button>
     <button id="headerSignOut" class="btn-outline hidden" type="button">Sign Out</button>
   </div>
 </header>
@@ -415,9 +376,7 @@ footer{
           <span style="font-size:12px; color:var(--muted);" id="userUsername"></span>
         </div>
       </div>
-      <div style="display:flex; gap:10px;">
-        <button id="dashboardSignOut" class="btn-light" type="button">Sign Out</button>
-      </div>
+      <button id="dashboardSignOut" class="btn-light" type="button">Sign Out</button>
     </div>
 
     <div class="modules">
@@ -440,48 +399,15 @@ footer{
     <section id="moduleViewer" class="viewer">
       <div class="viewer-head">
         <span id="viewerTitle">Module Workspace</span>
-        <div class="viewer-actions">
-          <button id="reloadModule" class="btn-light btn-sm" type="button">Refresh</button>
-          <button id="closeModule" class="btn-light btn-sm" type="button">✕ Close</button>
-        </div>
+        <div><button id="closeModule" class="btn-light btn-sm" type="button">✕ Close</button></div>
       </div>
       <iframe id="moduleFrame" title="Portal module viewer" src="about:blank"></iframe>
     </section>
   </section>
-
-  <!-- QUICK CONFIG & DIAGNOSTIC BAR -->
-  <div class="config-bar">
-    <div>
-      <strong>Backend URL:</strong> 
-      <code id="displayApiUrl">Loading...</code>
-    </div>
-    <div style="display:flex; gap:8px;">
-      <button id="btnTestConn" class="btn-light btn-sm" type="button">Test Connection</button>
-      <button id="btnEditUrl" class="btn-light btn-sm" type="button">Change URL</button>
-    </div>
-  </div>
 </main>
 
-<!-- CONFIG MODAL -->
-<div id="configModal" class="modal-overlay">
-  <div class="modal">
-    <h3>Configure Google Apps Script Backend URL</h3>
-    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">
-      Paste your deployed Web App URL (ending with <code>/exec</code>) from Google Apps Script:
-    </p>
-    <div class="field">
-      <input id="inputApiUrl" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-family:monospace; font-size:12px;" placeholder="https://script.google.com/macros/s/.../exec">
-    </div>
-    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
-      <button id="btnCancelConfig" class="btn-light" type="button">Cancel</button>
-      <button id="btnSaveConfig" class="btn-primary" type="button">Save URL</button>
-    </div>
-  </div>
-</div>
-
 <footer>
-  Bhagabanpur Gram Panchayat · Purba Medinipur · Government of West Bengal<br>
-  Control Manager Database · Secure Apps Script Authentication
+  Bhagabanpur Gram Panchayat · Purba Medinipur · Government of West Bengal
 </footer>
 
 <!-- HIDDEN FORM & IFRAME FOR CROSS-DOMAIN GAS COMMUNICATION -->
@@ -497,32 +423,18 @@ footer{
 <script>
 /**
  * BHAGABANPUR GP MANAGEMENT PORTAL CLIENT SCRIPT
- * Fixed with safety timeouts, eye toggle, dual-message handling, and role management.
+ * Configured with your deployed Google Apps Script Web App
  */
 
-// Default deployed Apps Script Web App URL
-const DEFAULT_AUTH_URL = "https://script.google.com/macros/s/AKfycbw_FJVCJ_xzpyojnMfriSVUZ17PvyuMs4pR5uDjyoYmW5EGmidy6gyucJn5QNSCTzlw/exec";
+const AUTH_API_URL = "https://script.google.com/macros/s/AKfycbw_FJVCJ_xzpyojnMfriSVUZ17PvyuMs4pR5uDjyoYmW5EGmidy6gyucJn5QNSCTzlw/exec";
 
-// Retrieve saved URL or use default
-let AUTH_API_URL = localStorage.getItem("gpPortalApiUrl") || DEFAULT_AUTH_URL;
-
-// Sub-modules
 const DATA_ENTRY_URL = "./dataentry.htm";
 const VERIFICATION_URL = "./verification.htm";
 
 const $ = id => document.getElementById(id);
-
 let pendingAction = "";
-let pendingRequestId = "";
 let requestTimeoutTimer = null;
 
-// Initialize display
-function updateApiDisplay() {
-  $("displayApiUrl").textContent = AUTH_API_URL || "Not configured";
-}
-updateApiDisplay();
-
-// Message helpers
 function showMessage(id, text, type) {
   const el = $(id);
   el.textContent = text;
@@ -536,14 +448,13 @@ function clearMessages() {
   });
 }
 
-// Switch between Login and Sign Up views
 function switchAuth(view) {
   clearMessages();
   $("signInView").classList.toggle("hidden", view !== "login");
   $("signUpView").classList.toggle("hidden", view !== "signup");
   $("authPanel").classList.remove("hidden");
   $("dashboard").classList.remove("show");
-  
+
   if (view === "login") {
     setTimeout(() => $("loginUsername") && $("loginUsername").focus(), 100);
   } else {
@@ -551,7 +462,6 @@ function switchAuth(view) {
   }
 }
 
-// Reset button states
 function resetButtonState(action) {
   if (requestTimeoutTimer) {
     clearTimeout(requestTimeoutTimer);
@@ -563,18 +473,9 @@ function resetButtonState(action) {
     button.textContent = action === "login" ? "Sign In to Portal" : "Submit Registration";
   }
   pendingAction = "";
-  pendingRequestId = "";
 }
 
-// Submit Authentication Request (Login / Sign Up)
 function submitAuth(action, data) {
-  if (!AUTH_API_URL || AUTH_API_URL.includes("PASTE_YOUR")) {
-    showMessage(action === "login" ? "loginMessage" : "signupMessage", 
-      "Please configure your Google Apps Script Web App URL first via Settings.", "error");
-    return;
-  }
-
-  // Pre-submission validation
   if (action === "login") {
     if (!data.username) {
       showMessage("loginMessage", "Please enter your username.", "error");
@@ -606,38 +507,33 @@ function submitAuth(action, data) {
 
   clearMessages();
   pendingAction = action;
-  pendingRequestId = "req_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-
   const button = $(action === "login" ? "loginButton" : "signupButton");
   button.disabled = true;
   button.textContent = action === "login" ? "Signing In..." : "Registering Account...";
 
-  // 15-second safety timeout so buttons NEVER get permanently stuck!
+  // 15-second safety timeout so button NEVER gets permanently stuck!
   requestTimeoutTimer = setTimeout(() => {
     resetButtonState(action);
     showMessage(
       action === "login" ? "loginMessage" : "signupMessage",
-      "Request timed out (15s). Please check your internet connection or verify your Google Apps Script Web App is deployed with 'Who has access: Anyone'.",
+      "Request timed out (15s). Please check your internet connection.",
       "error"
     );
   }, 15000);
 
-  // Populate hidden form and submit to hidden iframe
   $("authForm").action = AUTH_API_URL;
   $("formAction").value = action;
   $("formName").value = data.name || "";
   $("formUsername").value = data.username || "";
   $("formPassword").value = data.password || "";
-  $("formRequestId").value = pendingRequestId;
+  $("formRequestId").value = "req_" + Date.now();
   $("authForm").submit();
 }
 
-// Receive postMessage from Google Apps Script iframe
 window.addEventListener("message", event => {
   const payload = event.data;
   if (!payload || payload.type !== "GP_PORTAL_AUTH") return;
 
-  // Clear timeout timer
   if (requestTimeoutTimer) {
     clearTimeout(requestTimeoutTimer);
     requestTimeoutTimer = null;
@@ -661,7 +557,6 @@ window.addEventListener("message", event => {
     sessionStorage.setItem("gpPortalUser", JSON.stringify(result.user));
     renderDashboard(result.user);
   } else {
-    // Signup successful
     showMessage("signupMessage", result.message, "success");
     $("signupName").value = "";
     $("signupUsername").value = "";
@@ -673,7 +568,6 @@ window.addEventListener("message", event => {
   }
 });
 
-// Session Management
 function getCurrentUser() {
   try {
     return JSON.parse(sessionStorage.getItem("gpPortalUser") || "null");
@@ -690,18 +584,15 @@ function renderDashboard(user) {
   const isAdmin = String(user.level || "").toLowerCase() === "admin";
   $("authPanel").classList.add("hidden");
   $("dashboard").classList.add("show");
-  $("headerSignIn").classList.add("hidden");
-  $("headerSignUp").classList.add("hidden");
   $("headerSignOut").classList.remove("hidden");
-  
+
   $("welcomeUser").textContent = "Welcome, " + (user.name || user.username);
   $("userUsername").textContent = "@" + user.username;
-  
+
   const levelBadge = $("userLevelBadge");
   levelBadge.textContent = isAdmin ? "Administrator" : "Staff / Operator";
   levelBadge.className = "badge-role " + (isAdmin ? "badge-admin" : "badge-user");
-  
-  // Verification card is visible only to Administrators
+
   $("verificationCard").classList.toggle("hidden", !isAdmin);
   closeModule();
 }
@@ -710,14 +601,11 @@ function signOut() {
   sessionStorage.removeItem("gpPortalUser");
   $("dashboard").classList.remove("show");
   $("authPanel").classList.remove("hidden");
-  $("headerSignIn").classList.remove("hidden");
-  $("headerSignUp").classList.remove("hidden");
   $("headerSignOut").classList.add("hidden");
   closeModule();
   switchAuth("login");
 }
 
-// Module Viewer
 function openModule(url, title) {
   const user = getCurrentUser();
   if (!user) { signOut(); return; }
@@ -728,10 +616,9 @@ function openModule(url, title) {
   }
 
   $("viewerTitle").textContent = title + " Workspace — Bhagabanpur GP";
-  
   const frame = $("moduleFrame");
   frame.src = url;
-  
+
   $("moduleViewer").classList.add("show");
   $("moduleViewer").scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -741,7 +628,6 @@ function closeModule() {
   $("moduleViewer").classList.remove("show");
 }
 
-// Toggle password visibility
 function setupPasswordToggle(toggleId, inputId) {
   const toggleBtn = $(toggleId);
   const inputEl = $(inputId);
@@ -755,7 +641,6 @@ function setupPasswordToggle(toggleId, inputId) {
 setupPasswordToggle("toggleLoginPwd", "loginPassword");
 setupPasswordToggle("toggleSignupPwd", "signupPassword");
 
-// Button Click Events
 $("loginButton").addEventListener("click", () => {
   submitAuth("login", {
     username: $("loginUsername").value.trim(),
@@ -773,22 +658,13 @@ $("signupButton").addEventListener("click", () => {
 
 $("toSignUp").addEventListener("click", () => switchAuth("signup"));
 $("toSignIn").addEventListener("click", () => switchAuth("login"));
-$("headerSignIn").addEventListener("click", () => switchAuth("login"));
-$("headerSignUp").addEventListener("click", () => switchAuth("signup"));
 $("headerSignOut").addEventListener("click", signOut);
 $("dashboardSignOut").addEventListener("click", signOut);
 
 $("dataEntryButton").addEventListener("click", () => openModule(DATA_ENTRY_URL, "Data Entry"));
 $("verificationButton").addEventListener("click", () => openModule(VERIFICATION_URL, "Verification"));
 $("closeModule").addEventListener("click", closeModule);
-$("reloadModule").addEventListener("click", () => {
-  const currentSrc = $("moduleFrame").src;
-  if (currentSrc && currentSrc !== "about:blank") {
-    $("moduleFrame").src = currentSrc;
-  }
-});
 
-// Enter key submission
 ["loginUsername", "loginPassword"].forEach(id => {
   $(id).addEventListener("keydown", e => {
     if (e.key === "Enter") $("loginButton").click();
@@ -800,51 +676,692 @@ $("reloadModule").addEventListener("click", () => {
   });
 });
 
-// Settings & Diagnostic Modal
-$("headerSettings").addEventListener("click", () => {
-  $("inputApiUrl").value = AUTH_API_URL;
-  $("configModal").classList.add("show");
-});
-$("btnEditUrl").addEventListener("click", () => {
-  $("inputApiUrl").value = AUTH_API_URL;
-  $("configModal").classList.add("show");
-});
-$("btnCancelConfig").addEventListener("click", () => {
-  $("configModal").classList.remove("show");
-});
-$("btnSaveConfig").addEventListener("click", () => {
-  const val = $("inputApiUrl").value.trim();
-  if (val) {
-    AUTH_API_URL = val;
-    localStorage.setItem("gpPortalApiUrl", val);
-    updateApiDisplay();
-    $("configModal").classList.remove("show");
-    alert("Apps Script Backend URL updated successfully.");
+// Restore session on refresh
+const existingUser = getCurrentUser();
+if (existingUser) {
+  renderDashboard(existingUser);
+}
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bhagabanpur GP Management Portal</title>
+<style>
+:root{
+  --navy: #102b4e;
+  --navy2: #173e68;
+  --navy-dark: #0a1c33;
+  --gold: #e7b84b;
+  --gold-hover: #d4a539;
+  --bg: #f4f7fb;
+  --card-bg: #ffffff;
+  --text: #1d2939;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --success-bg: #ecfdf5;
+  --success-text: #065f46;
+  --error-bg: #fef2f2;
+  --error-text: #991b1b;
+  --warning-bg: #fffbeb;
+  --warning-text: #92400e;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Header */
+.topbar{
+  min-height:72px;
+  background:linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 5%;
+  box-shadow:0 4px 20px rgba(16,43,78,0.15);
+  border-bottom:2px solid var(--gold);
+}
+.brand-group{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brand-badge{
+  width:42px;
+  height:42px;
+  background:var(--gold);
+  color:var(--navy);
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  font-size:18px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
+}
+.brand{
+  font-weight:800;
+  letter-spacing:.5px;
+  font-size:17px;
+  line-height:1.2;
+}
+.brand small{
+  display:block;
+  margin-top:2px;
+  color:#d9e4f2;
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:1.5px;
+}
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+button{
+  border:0;
+  border-radius:8px;
+  padding:10px 18px;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+  transition:all 0.2s ease;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+button:disabled{opacity:.65;cursor:not-allowed}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover:not(:disabled){background:var(--gold-hover);transform:translateY(-1px)}
+.btn-outline{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.4)}
+.btn-outline:hover:not(:disabled){background:rgba(255,255,255,0.1);border-color:#fff}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--navy2);transform:translateY(-1px)}
+.btn-light{background:#edf2f7;color:var(--navy)}
+.btn-light:hover:not(:disabled){background:#e2e8f0}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:6px}
+
+/* Main */
+main{
+  max-width:1100px;
+  margin:36px auto;
+  padding:0 20px;
+  flex:1;
+  width:100%;
+}
+.welcome{text-align:center;margin:10px 0 28px}
+.welcome h1{margin:0 0 8px;color:var(--navy);font-size:clamp(24px,4vw,34px);font-weight:800}
+.welcome p{margin:0;color:var(--muted);font-size:15px}
+
+/* Auth Container */
+.auth-panel{
+  max-width:440px;
+  margin:0 auto;
+  padding:32px;
+  background:var(--card-bg);
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:0 15px 35px rgba(25,57,93,0.07);
+}
+.auth-panel h2{margin:0 0 6px;color:var(--navy);font-size:22px}
+.sub{margin:0 0 22px;color:var(--muted);font-size:13px;line-height:1.4}
+.field{margin:16px 0}
+.field label{display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:var(--navy)}
+.input-wrap{position:relative}
+.field input{
+  width:100%;
+  padding:12px 14px;
+  border:1.5px solid #cbd5e1;
+  border-radius:9px;
+  font:inherit;
+  outline:none;
+  font-size:14px;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+.field input:focus{border-color:var(--navy2);box-shadow:0 0 0 3px rgba(23,62,104,0.15)}
+.field .toggle-pwd{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  background:none;
+  border:none;
+  color:var(--muted);
+  cursor:pointer;
+  padding:4px 8px;
+  font-size:12px;
+  font-weight:600;
+}
+.form-actions{margin-top:24px}
+.form-actions button{width:100%;padding:13px;font-size:15px}
+.switch{text-align:center;color:var(--muted);font-size:13px;margin:20px 0 0}
+.link{padding:0;background:none;color:#1d5f9e;font-weight:700;text-decoration:underline;cursor:pointer}
+
+/* Messages */
+.message{
+  display:none;
+  margin:14px 0;
+  padding:12px 14px;
+  border-radius:8px;
+  font-size:13px;
+  line-height:1.45;
+}
+.message.show{display:block}
+.message.error{background:var(--error-bg);color:var(--error-text);border:1px solid #fecaca}
+.message.success{background:var(--success-bg);color:var(--success-text);border:1px solid #a7f3d0}
+.message.warning{background:var(--warning-bg);color:var(--warning-text);border:1px solid #fde68a}
+
+/* Dashboard */
+.dashboard{display:none}
+.dashboard.show{display:block}
+.user-strip{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  margin-bottom:28px;
+  padding:18px 24px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.03);
+}
+.user-info strong{display:block;color:var(--navy);font-size:18px}
+.user-meta{display:flex;align-items:center;gap:10px;margin-top:4px}
+.badge-role{
+  display:inline-block;
+  padding:2px 10px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.badge-admin{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.badge-user{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
+.user-status{font-size:12px;color:#16a34a;font-weight:600}
+
+.modules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.module-card{
+  display:flex;
+  min-height:210px;
+  flex-direction:column;
+  align-items:flex-start;
+  padding:28px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 8px 24px rgba(25,57,93,0.05);
+}
+.module-icon{
+  display:grid;
+  width:52px;
+  height:52px;
+  place-items:center;
+  margin-bottom:18px;
+  border-radius:14px;
+  background:#edf3fa;
+  color:var(--navy2);
+  font-size:26px;
+}
+.module-card h3{margin:0 0 8px;color:var(--navy);font-size:20px}
+.module-card p{flex:1;margin:0 0 22px;color:var(--muted);font-size:14px}
+.module-card button{width:100%}
+
+/* Viewer */
+.viewer{
+  display:none;
+  overflow:hidden;
+  margin-top:28px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.06);
+}
+.viewer.show{display:block}
+.viewer-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 20px;
+  background:var(--navy);
+  color:#fff;
+  font-weight:700;
+}
+.viewer iframe{display:block;width:100%;height:calc(100vh - 220px);min-height:550px;border:0}
+
+footer{
+  padding:24px 10px;
+  color:#64748b;
+  font-size:12px;
+  text-align:center;
+  border-top:1px solid var(--line);
+  background:#fff;
+}
+.hidden{display:none!important}
+
+@media(max-width:650px){
+  .topbar{padding:12px 16px}
+  .brand{font-size:14px}
+  main{margin:20px auto}
+  .modules{grid-template-columns:1fr}
+  .user-strip{flex-direction:column;align-items:flex-start}
+  .viewer iframe{height:75vh;min-height:420px}
+  .auth-panel{padding:22px 18px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand-group">
+    <div class="brand-badge">GP</div>
+    <div class="brand">
+      BHAGABANPUR GRAM PANCHAYAT
+      <small>GOVERNMENT MANAGEMENT PORTAL</small>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button id="headerSignOut" class="btn-outline hidden" type="button">Sign Out</button>
+  </div>
+</header>
+
+<main>
+  <section class="welcome">
+    <h1>Gram Panchayat Management Portal</h1>
+    <p>Secure Role-Based Access for Data Entry and Verification Modules</p>
+  </section>
+
+  <!-- AUTHENTICATION PANEL -->
+  <section id="authPanel" class="auth-panel">
+    <!-- Sign In View -->
+    <div id="signInView">
+      <h2>Portal Login</h2>
+      <p class="sub">Sign in with your authorized Bhagabanpur GP account.</p>
+      
+      <div class="field">
+        <label for="loginUsername">Username</label>
+        <div class="input-wrap">
+          <input id="loginUsername" autocomplete="username" placeholder="Enter username (e.g. admin)">
+        </div>
+      </div>
+      
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <div class="input-wrap">
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Enter password">
+          <button type="button" class="toggle-pwd" id="toggleLoginPwd">Show</button>
+        </div>
+      </div>
+      
+      <div id="loginMessage" class="message"></div>
+      
+      <div class="form-actions">
+        <button id="loginButton" class="btn-primary" type="button">Sign In to Portal</button>
+      </div>
+      
+      <p class="switch">New staff or operator? <button id="toSignUp" class="link" type="button">Create account</button></p>
+    </div>
+
+    <!-- Sign Up View -->
+    <div id="signUpView" class="hidden">
+      <h2>Register Account</h2>
+      <p class="sub">New registrations require Administrator approval before access is granted.</p>
+      
+      <div class="field">
+        <label for="signupName">Full Name</label>
+        <div class="input-wrap">
+          <input id="signupName" autocomplete="name" placeholder="Enter full name">
+        </div>
+      </div>
+      
+      <div class="field">
+        <label for="signupUsername">Username</label>
+        <div class="input-wrap">
+          <input id="signupUsername" autocomplete="username" placeholder="Choose a username (min 3 chars)">
+        </div>
+      </div>
+      
+      <div class="field">
+        <label for="signupPassword">Password</label>
+        <div class="input-wrap">
+          <input id="signupPassword" type="password" autocomplete="new-password" placeholder="Minimum 6 characters">
+          <button type="button" class="toggle-pwd" id="toggleSignupPwd">Show</button>
+        </div>
+      </div>
+      
+      <div id="signupMessage" class="message"></div>
+      
+      <div class="form-actions">
+        <button id="signupButton" class="btn-primary" type="button">Submit Registration</button>
+      </div>
+      
+      <p class="switch">Already registered? <button id="toSignIn" class="link" type="button">Back to Sign In</button></p>
+    </div>
+  </section>
+
+  <!-- DASHBOARD PANEL -->
+  <section id="dashboard" class="dashboard">
+    <div class="user-strip">
+      <div class="user-info">
+        <strong id="welcomeUser">Welcome</strong>
+        <div class="user-meta">
+          <span id="userLevelBadge" class="badge-role badge-user">User</span>
+          <span class="user-status">● Authorized</span>
+          <span style="font-size:12px; color:var(--muted);" id="userUsername"></span>
+        </div>
+      </div>
+      <button id="dashboardSignOut" class="btn-light" type="button">Sign Out</button>
+    </div>
+
+    <div class="modules">
+      <article class="module-card">
+        <div class="module-icon">✍️</div>
+        <h3>Data Entry Module</h3>
+        <p>Record village census, tax assessments, scheme enrollments, and citizen requests.</p>
+        <button id="dataEntryButton" class="btn-primary" type="button">Launch Data Entry</button>
+      </article>
+
+      <article id="verificationCard" class="module-card hidden">
+        <div class="module-icon">🛡️</div>
+        <h3>Verification Module</h3>
+        <p>Review submitted entries, approve certificates, verify bank details, and audit records. (Admin Only)</p>
+        <button id="verificationButton" class="btn-gold" type="button">Launch Verification</button>
+      </article>
+    </div>
+
+    <!-- MODULE VIEWER -->
+    <section id="moduleViewer" class="viewer">
+      <div class="viewer-head">
+        <span id="viewerTitle">Module Workspace</span>
+        <div><button id="closeModule" class="btn-light btn-sm" type="button">✕ Close</button></div>
+      </div>
+      <iframe id="moduleFrame" title="Portal module viewer" src="about:blank"></iframe>
+    </section>
+  </section>
+</main>
+
+<footer>
+  Bhagabanpur Gram Panchayat · Purba Medinipur · Government of West Bengal
+</footer>
+
+<!-- HIDDEN FORM & IFRAME FOR CROSS-DOMAIN GAS COMMUNICATION -->
+<iframe name="authResponseFrame" id="authResponseFrame" class="hidden" title="Authentication response iframe"></iframe>
+<form id="authForm" method="post" target="authResponseFrame" class="hidden">
+  <input type="hidden" name="action" id="formAction">
+  <input type="hidden" name="name" id="formName">
+  <input type="hidden" name="username" id="formUsername">
+  <input type="hidden" name="password" id="formPassword">
+  <input type="hidden" name="requestId" id="formRequestId">
+</form>
+
+<script>
+/**
+ * BHAGABANPUR GP MANAGEMENT PORTAL CLIENT SCRIPT
+ * Configured with your deployed Google Apps Script Web App
+ */
+
+const AUTH_API_URL = "https://script.google.com/macros/s/AKfycbw_FJVCJ_xzpyojnMfriSVUZ17PvyuMs4pR5uDjyoYmW5EGmidy6gyucJn5QNSCTzlw/exec";
+
+const DATA_ENTRY_URL = "./dataentry.htm";
+const VERIFICATION_URL = "./verification.htm";
+
+const $ = id => document.getElementById(id);
+let pendingAction = "";
+let requestTimeoutTimer = null;
+
+function showMessage(id, text, type) {
+  const el = $(id);
+  el.textContent = text;
+  el.className = "message show " + type;
+}
+
+function clearMessages() {
+  ["loginMessage", "signupMessage"].forEach(id => {
+    $(id).textContent = "";
+    $(id).className = "message";
+  });
+}
+
+function switchAuth(view) {
+  clearMessages();
+  $("signInView").classList.toggle("hidden", view !== "login");
+  $("signUpView").classList.toggle("hidden", view !== "signup");
+  $("authPanel").classList.remove("hidden");
+  $("dashboard").classList.remove("show");
+
+  if (view === "login") {
+    setTimeout(() => $("loginUsername") && $("loginUsername").focus(), 100);
+  } else {
+    setTimeout(() => $("signupName") && $("signupName").focus(), 100);
+  }
+}
+
+function resetButtonState(action) {
+  if (requestTimeoutTimer) {
+    clearTimeout(requestTimeoutTimer);
+    requestTimeoutTimer = null;
+  }
+  const button = $(action === "login" ? "loginButton" : "signupButton");
+  if (button) {
+    button.disabled = false;
+    button.textContent = action === "login" ? "Sign In to Portal" : "Submit Registration";
+  }
+  pendingAction = "";
+}
+
+function submitAuth(action, data) {
+  if (action === "login") {
+    if (!data.username) {
+      showMessage("loginMessage", "Please enter your username.", "error");
+      $("loginUsername").focus();
+      return;
+    }
+    if (!data.password) {
+      showMessage("loginMessage", "Please enter your password.", "error");
+      $("loginPassword").focus();
+      return;
+    }
+  } else if (action === "signup") {
+    if (!data.name) {
+      showMessage("signupMessage", "Please enter your full name.", "error");
+      $("signupName").focus();
+      return;
+    }
+    if (!data.username || data.username.length < 3) {
+      showMessage("signupMessage", "Username must be at least 3 characters long.", "error");
+      $("signupUsername").focus();
+      return;
+    }
+    if (!data.password || data.password.length < 6) {
+      showMessage("signupMessage", "Password must be at least 6 characters long.", "error");
+      $("signupPassword").focus();
+      return;
+    }
+  }
+
+  clearMessages();
+  pendingAction = action;
+  const button = $(action === "login" ? "loginButton" : "signupButton");
+  button.disabled = true;
+  button.textContent = action === "login" ? "Signing In..." : "Registering Account...";
+
+  // 15-second safety timeout so button NEVER gets permanently stuck!
+  requestTimeoutTimer = setTimeout(() => {
+    resetButtonState(action);
+    showMessage(
+      action === "login" ? "loginMessage" : "signupMessage",
+      "Request timed out (15s). Please check your internet connection.",
+      "error"
+    );
+  }, 15000);
+
+  $("authForm").action = AUTH_API_URL;
+  $("formAction").value = action;
+  $("formName").value = data.name || "";
+  $("formUsername").value = data.username || "";
+  $("formPassword").value = data.password || "";
+  $("formRequestId").value = "req_" + Date.now();
+  $("authForm").submit();
+}
+
+window.addEventListener("message", event => {
+  const payload = event.data;
+  if (!payload || payload.type !== "GP_PORTAL_AUTH") return;
+
+  if (requestTimeoutTimer) {
+    clearTimeout(requestTimeoutTimer);
+    requestTimeoutTimer = null;
+  }
+
+  const action = pendingAction || (payload.result && payload.result.user ? "login" : "signup");
+  resetButtonState(action);
+
+  const result = payload.result || {};
+
+  if (!result.success) {
+    showMessage(
+      action === "login" ? "loginMessage" : "signupMessage",
+      result.message || "Request failed. Please try again.",
+      "error"
+    );
+    return;
+  }
+
+  if (action === "login") {
+    sessionStorage.setItem("gpPortalUser", JSON.stringify(result.user));
+    renderDashboard(result.user);
+  } else {
+    showMessage("signupMessage", result.message, "success");
+    $("signupName").value = "";
+    $("signupUsername").value = "";
+    $("signupPassword").value = "";
+    setTimeout(() => {
+      switchAuth("login");
+      showMessage("loginMessage", "Registration submitted! Contact Admin to activate your access.", "warning");
+    }, 2500);
   }
 });
 
-// Connection Tester
-$("btnTestConn").addEventListener("click", () => {
-  const btn = $("btnTestConn");
-  btn.disabled = true;
-  btn.textContent = "Testing...";
-  
-  const testUrl = AUTH_API_URL + (AUTH_API_URL.includes("?") ? "&" : "?") + "action=ping&format=json";
-  
-  fetch(testUrl, { mode: "no-cors" })
-    .then(() => {
-      btn.disabled = false;
-      btn.textContent = "✓ Online";
-      setTimeout(() => btn.textContent = "Test Connection", 3000);
-    })
-    .catch(err => {
-      btn.disabled = false;
-      btn.textContent = "Test Connection";
-      alert("Could not reach the Web App directly. Please verify your Apps Script is deployed with 'Who has access: Anyone'.");
-    });
+function getCurrentUser() {
+  try {
+    return JSON.parse(sessionStorage.getItem("gpPortalUser") || "null");
+  } catch(e) {
+    return null;
+  }
+}
+
+function renderDashboard(user) {
+  if (!user || !user.username) {
+    signOut();
+    return;
+  }
+  const isAdmin = String(user.level || "").toLowerCase() === "admin";
+  $("authPanel").classList.add("hidden");
+  $("dashboard").classList.add("show");
+  $("headerSignOut").classList.remove("hidden");
+
+  $("welcomeUser").textContent = "Welcome, " + (user.name || user.username);
+  $("userUsername").textContent = "@" + user.username;
+
+  const levelBadge = $("userLevelBadge");
+  levelBadge.textContent = isAdmin ? "Administrator" : "Staff / Operator";
+  levelBadge.className = "badge-role " + (isAdmin ? "badge-admin" : "badge-user");
+
+  $("verificationCard").classList.toggle("hidden", !isAdmin);
+  closeModule();
+}
+
+function signOut() {
+  sessionStorage.removeItem("gpPortalUser");
+  $("dashboard").classList.remove("show");
+  $("authPanel").classList.remove("hidden");
+  $("headerSignOut").classList.add("hidden");
+  closeModule();
+  switchAuth("login");
+}
+
+function openModule(url, title) {
+  const user = getCurrentUser();
+  if (!user) { signOut(); return; }
+
+  if (title === "Verification" && String(user.level || "").toLowerCase() !== "admin") {
+    alert("Unauthorized: Only Panchayat Administrators can access the Verification module.");
+    return;
+  }
+
+  $("viewerTitle").textContent = title + " Workspace — Bhagabanpur GP";
+  const frame = $("moduleFrame");
+  frame.src = url;
+
+  $("moduleViewer").classList.add("show");
+  $("moduleViewer").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closeModule() {
+  $("moduleFrame").src = "about:blank";
+  $("moduleViewer").classList.remove("show");
+}
+
+function setupPasswordToggle(toggleId, inputId) {
+  const toggleBtn = $(toggleId);
+  const inputEl = $(inputId);
+  if (!toggleBtn || !inputEl) return;
+  toggleBtn.addEventListener("click", () => {
+    const isPwd = inputEl.type === "password";
+    inputEl.type = isPwd ? "text" : "password";
+    toggleBtn.textContent = isPwd ? "Hide" : "Show";
+  });
+}
+setupPasswordToggle("toggleLoginPwd", "loginPassword");
+setupPasswordToggle("toggleSignupPwd", "signupPassword");
+
+$("loginButton").addEventListener("click", () => {
+  submitAuth("login", {
+    username: $("loginUsername").value.trim(),
+    password: $("loginPassword").value
+  });
 });
 
-// Restore current tab's session
+$("signupButton").addEventListener("click", () => {
+  submitAuth("signup", {
+    name: $("signupName").value.trim(),
+    username: $("signupUsername").value.trim(),
+    password: $("signupPassword").value
+  });
+});
+
+$("toSignUp").addEventListener("click", () => switchAuth("signup"));
+$("toSignIn").addEventListener("click", () => switchAuth("login"));
+$("headerSignOut").addEventListener("click", signOut);
+$("dashboardSignOut").addEventListener("click", signOut);
+
+$("dataEntryButton").addEventListener("click", () => openModule(DATA_ENTRY_URL, "Data Entry"));
+$("verificationButton").addEventListener("click", () => openModule(VERIFICATION_URL, "Verification"));
+$("closeModule").addEventListener("click", closeModule);
+
+["loginUsername", "loginPassword"].forEach(id => {
+  $(id).addEventListener("keydown", e => {
+    if (e.key === "Enter") $("loginButton").click();
+  });
+});
+["signupName", "signupUsername", "signupPassword"].forEach(id => {
+  $(id).addEventListener("keydown", e => {
+    if (e.key === "Enter") $("signupButton").click();
+  });
+});
+
+// Restore session on refresh
 const existingUser = getCurrentUser();
 if (existingUser) {
   renderDashboard(existingUser);
