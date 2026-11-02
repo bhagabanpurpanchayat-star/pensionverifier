@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PENSION_DATA</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; }
+  h2 { text-align: center; margin: 8px 0 16px; }
+  .card { max-width: 1100px; margin: 0 auto 20px; background: #fff; padding: 20px;
+          border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  label { display: block; font-size: 13px; margin-bottom: 4px; font-weight: 600; color: #333; }
+  input, select { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+  input:focus, select:focus { outline: none; border-color: #1a73e8; }
+  .actions { margin-top: 20px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  button { padding: 10px 28px; font-size: 15px; background: #1a73e8; color: #fff;
+           border: none; border-radius: 4px; cursor: pointer; }
+  button.secondary { background: #6c757d; }
+  button:disabled { background: #999; cursor: not-allowed; }
+  #msg { text-align: center; margin-top: 12px; font-size: 14px; }
+  #status { text-align: center; margin-top: 6px; font-size: 12px; color: #666; }
+  .hidden { display: none !important; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; white-space: nowrap; }
+  th { background: #f0f4fa; position: sticky; top: 0; }
+  .table-wrap { max-height: 360px; overflow: auto; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
+  .toolbar input { max-width: 240px; }
+  .badge-pending { background: #ffc107; color: #333; padding: 1px 6px; border-radius: 3px; font-size: 11px; margin-left: 6px; }
+  .badge-synced  { background: #28a745; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 11px; margin-left: 6px; }
+  .badge-error   { background: #dc3545; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 11px; margin-left: 6px; }
+</style>
+</head>
+<body>
+<h2>PENSION_DATA</h2>
+
+<div class="card">
+  <form id="pensionForm">
+    <div class="grid" id="formGrid"></div>
+    <div class="actions">
+      <button type="submit" id="submitBtn">Save Locally &amp; Sync</button>
+      <button type="button" id="syncBtn" class="secondary">Sync Now</button>
+      <button type="button" id="clearBtn" class="secondary">Clear Synced</button>
+    </div>
+    <div id="msg"></div>
+    <div id="status"></div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="toolbar">
+    <strong>Entered Records</strong>
+    <input type="text" id="searchBox" placeholder="Search...">
+    <button type="button" id="refreshBtn" class="secondary">Refresh</button>
+  </div>
+  <div class="table-wrap">
+    <table id="recordsTable">
+      <thead><tr id="recordsHead"></tr></thead>
+      <tbody id="recordsBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+/* ====== CONFIG: paste your deployed Apps Script Web App URL here ====== */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx43FKVkhMDv86FN4VeiftUuG-gzrS8xyYClF8uoJ1l78lpfwoGm7GOhOdlOApcghCDOQ/exec';
+/* ===================================================================== */
+
+const FORM_FIELDS = [
+  'Aadhaar Number',
+  'Registration No.',
+  'Beneficiary First Name',
+  'Beneficiary Last Name',
+  'Gender',
+  'Date of Birth',
+  'Father First Name',
+  'Father Last Name',
+  'Mother First Name',
+  'Mother Last Name',
+  'Caste',
+  'Caste Certificate No.',
+  'EPIC / Voter ID',
+  'GP / Ward No',
+  'Village / Town / City',
+  'Post Office',
+  'Pin Code',
+  'Mobile No',
+  'Bank IFSC',
+  'Bank Account No'
+];
+
+const HEADERS = [
+  'Aadhaar Number', 'Application Date', 'Application Type',
+  'Registration No.', 'Registration Date', 'Beneficiary First Name',
+  'Beneficiary Middle Name', 'Beneficiary Last Name', 'Gender',
+  'Date of Birth', 'Father First Name', 'Father Middle Name',
+  'Father Last Name', 'Mother First Name', 'Mother Middle Name',
+  'Mother Last Name', 'Caste', 'Caste Certificate No.',
+  'Marital Status', 'Monthly Family Income (In Rs)', 'EPIC / Voter ID',
+  'GP / Ward No', 'Village / Town / City', 'Post Office', 'Pin Code',
+  'Mobile No', 'Bank IFSC', 'Bank Account No'
+];
+
+const DROPDOWN_MAP = {
+  'GP / Ward No': 'gp',
+  'Post Office': 'postOffice',
+  'Bank IFSC': 'ifsc'
+};
+
+const STATIC_OPTIONS = {
+  'Caste': ['General', 'SC', 'ST'],
+  'Gender': ['Male', 'Female']
+};
+
+const DATE_FIELDS = ['Date of Birth'];
+const NUMBER_FIELDS = ['Pin Code', 'Mobile No'];
+
+/* Local storage keys */
+const LS_QUEUE = 'pension_queue_v1';     /* pending (unsynced) rows */
+const LS_DONE  = 'pension_done_v1';      /* synced rows kept locally for display */
+
+function uid() {
+  return 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+}
+
+function loadLS(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch { return fallback; }
+}
+
+function saveLS(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {
+    console.warn('localStorage save failed', e);
+  }
+}
+
+function getQueue() { return loadLS(LS_QUEUE, []); }
+function setQueue(q) { saveLS(LS_QUEUE, q); updateStatus(); }
+function getDone()  { return loadLS(LS_DONE, []);  }
+function setDone(d) { saveLS(LS_DONE, d); }
+
+function fieldType(h) {
+  if (DATE_FIELDS.includes(h)) return 'date';
+  if (NUMBER_FIELDS.includes(h)) return 'number';
+  return 'text';
+}
+
+function formatCellValue(header, value) {
+  if (value === null || value === undefined || value === '') return '';
+  if (DATE_FIELDS.includes(header)) {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return String(value);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return dd + '/' + mm + '/' + yyyy;
+  }
+  return String(value);
+}
+
+function buildForm(dropdownData) {
+  const grid = document.getElementById('formGrid');
+  grid.innerHTML = '';
+  FORM_FIELDS.forEach(h => {
+    const wrap = document.createElement('div');
+    wrap.dataset.field = h;
+    const label = document.createElement('label');
+    label.textContent = h;
+    label.setAttribute('for', h);
+
+    let input;
+    if (STATIC_OPTIONS[h] || DROPDOWN_MAP[h]) {
+      input = document.createElement('select');
+      input.id = h; input.name = h;
+      const empty = document.createElement('option');
+      empty.value = ''; empty.textContent = '-- Select --';
+      input.appendChild(empty);
+      const opts = STATIC_OPTIONS[h] ? STATIC_OPTIONS[h] : (dropdownData[DROPDOWN_MAP[h]] || []);
+      opts.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v; opt.textContent = v;
+        input.appendChild(opt);
+      });
+    } else {
+      input = document.createElement('input');
+      input.type = fieldType(h);
+      input.id = h; input.name = h;
+      if (input.type === 'number') input.step = 'any';
+    }
+
+    wrap.appendChild(label);
+    wrap.appendChild(input);
+    grid.appendChild(wrap);
+  });
+
+  const casteEl = document.getElementById('Caste');
+  casteEl.addEventListener('change', toggleCasteCert);
+  toggleCasteCert();
+}
+
+function toggleCasteCert() {
+  const caste = document.getElementById('Caste').value;
+  const wrap = document.querySelector('[data-field="Caste Certificate No."]');
+  const input = document.getElementById('Caste Certificate No.');
+  const show = (caste === 'SC' || caste === 'ST');
+  wrap.classList.toggle('hidden', !show);
+  if (!show) input.value = '';
+}
+
+function loadDropdowns() {
+  fetch(WEB_APP_URL + '?action=dropdowns')
+    .then(r => r.json())
+    .then(data => buildForm(data))
+    .catch(err => {
+      console.warn('Dropdown load failed', err);
+      buildForm({});
+    });
+}
+
+/* ---------- Local save + background sync ---------- */
+
+function collectForm() {
+  const formObject = {};
+  HEADERS.forEach(h => {
+    const el = document.getElementById(h);
+    formObject[h] = el ? el.value : '';
+  });
+  const dob = formObject['Date of Birth'];
+  if (dob && dob.indexOf('-') > -1) {
+    const p = dob.split('-');
+    if (p.length === 3) formObject['Date of Birth'] = p[2] + '/' + p[1] + '/' + p[0];
+  }
+  return formObject;
+}
+
+document.getElementById('pensionForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const data = collectForm();
+  const row = { id: uid(), status: 'pending', attempts: 0, ts: Date.now(), data };
+  const q = getQueue();
+  q.push(row);
+  setQueue(q);
+
+  document.getElementById('msg').textContent = 'Saved locally. Syncing in background...';
+  document.getElementById('pensionForm').reset();
+  toggleCasteCert();
+  renderMergedRecords();
+  kickSync();
+});
+
+let syncing = false;
+
+function kickSync() {
+  if (syncing) return;
+  const q = getQueue().filter(r => r.status !== 'syncing');
+  if (!q.length) return;
+  syncing = true;
+  processQueue();
+}
+
+function processQueue() {
+  const queue = getQueue();
+  const idx = queue.findIndex(r => r.status === 'pending' || r.status === 'error');
+  if (idx === -1) {
+    syncing = false;
+    updateStatus();
+    return;
+  }
+  const item = queue[idx];
+  queue[idx].status = 'syncing';
+  setQueue(queue);
+
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(item.data)
+  })
+  .then(r => r.json())
+  .then(res => {
+    const q2 = getQueue();
+    const i2 = q2.findIndex(r => r.id === item.id);
+    if (i2 === -1) { syncing = false; processQueue(); return; }
+    if (res.ok) {
+      q2.splice(i2, 1);
+      setQueue(q2);
+      const done = getDone();
+      done.push({ ...item, status: 'synced' });
+      setDone(done);
+      document.getElementById('msg').textContent = 'Synced. ' + (q2.length) + ' pending.';
+    } else {
+      q2[i2].status = 'error';
+      q2[i2].attempts = (q2[i2].attempts || 0) + 1;
+      q2[i2].lastError = res.msg;
+      setQueue(q2);
+      document.getElementById('msg').textContent = 'Sync error: ' + res.msg + ' (will retry)';
+    }
+    renderMergedRecords();
+    if (q2.length) setTimeout(processQueue, 500);
+    else { syncing = false; updateStatus(); }
+  })
+  .catch(err => {
+    const q2 = getQueue();
+    const i2 = q2.findIndex(r => r.id === item.id);
+    if (i2 !== -1) {
+      q2[i2].status = 'error';
+      q2[i2].attempts = (q2[i2].attempts || 0) + 1;
+      q2[i2].lastError = err.message;
+      setQueue(q2);
+    }
+    document.getElementById('msg').textContent = 'Network error, will retry.';
+    renderMergedRecords();
+    setTimeout(() => { syncing = false; processQueue(); }, 3000);
+  });
+}
+
+function updateStatus() {
+  const q = getQueue();
+  const pending = q.filter(r => r.status === 'pending').length;
+  const errs = q.filter(r => r.status === 'error').length;
+  document.getElementById('status').textContent =
+    'Local pending: ' + pending + (errs ? ' | errors: ' + errs : '');
+}
+
+document.getElementById('syncBtn').addEventListener('click', () => {
+  const q = getQueue().map(r => r.status === 'error' ? { ...r, status: 'pending' } : r);
+  setQueue(q);
+  kickSync();
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  setDone([]);
+  renderMergedRecords();
+});
+
+/* ---------- Records list (local pending + local done + server rows) ---------- */
+
+const LIST_COLUMNS = FORM_FIELDS;
+let SERVER_ROWS = [];
+let SERVER_INDEX = {};
+
+function loadRecords() {
+  fetch(WEB_APP_URL + '?action=list')
+    .then(r => r.json())
+    .then(data => {
+      SERVER_ROWS = data.rows || [];
+      SERVER_INDEX = {};
+      (data.headers || HEADERS).forEach((h, i) => { SERVER_INDEX[h] = i; });
+      renderMergedRecords();
+    })
+    .catch(err => {
+      console.warn('List load failed', err);
+      renderMergedRecords();
+    });
+}
+
+function dataToRowArray(d) {
+  return HEADERS.map(h => d[h] || '');
+}
+
+function dedupeKey(rowArray) {
+  /* Aadhaar + Registration No. as identity; fallback to full row */
+  const a = String(rowArray[SERVER_INDEX['Aadhaar Number']] || '');
+  const r = String(rowArray[SERVER_INDEX['Registration No.']] || '');
+  if (a || r) return a + '|' + r;
+  return rowArray.join('|');
+}
+
+function renderMergedRecords() {
+  const head = document.getElementById('recordsHead');
+  const body = document.getElementById('recordsBody');
+
+  head.innerHTML = '';
+  LIST_COLUMNS.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    head.appendChild(th);
+  });
+
+  const rows = [];
+
+  /* Server rows first */
+  SERVER_ROWS.forEach(r => rows.push({ source: 'server', arr: r, status: '' }));
+
+  /* Local done rows (synced from this browser) - skip if already in server by dedupe */
+  const serverKeys = new Set(SERVER_ROWS.map(r => dedupeKey(r)));
+  getDone().forEach(item => {
+    const arr = dataToRowArray(item.data);
+    const key = dedupeKey(arr);
+    if (!serverKeys.has(key)) {
+      rows.push({ source: 'done', arr, status: 'synced' });
+    }
+  });
+
+  /* Local pending/error rows */
+  getQueue().forEach(item => {
+    const arr = dataToRowArray(item.data);
+    rows.push({ source: 'queue', arr, status: item.status || 'pending' });
+  });
+
+  body.innerHTML = '';
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="' + LIST_COLUMNS.length + '">No records yet</td></tr>';
+    return;
+  }
+
+  rows.forEach(entry => {
+    const tr = document.createElement('tr');
+    LIST_COLUMNS.forEach(h => {
+      const td = document.createElement('td');
+      const idx = SERVER_INDEX[h];
+      let v = '';
+      if (idx !== undefined) v = formatCellValue(h, entry.arr[idx]);
+      else {
+        /* Fallback: look by header order in HEADERS if server index missing */
+        const hi = HEADERS.indexOf(h);
+        if (hi !== -1) v = formatCellValue(h, entry.arr[hi]);
+      }
+      td.textContent = v;
+      tr.appendChild(td);
+    });
+
+    /* Status badge appended to first cell */
+    if (entry.source !== 'server') {
+      const firstCell = tr.firstChild;
+      const badge = document.createElement('span');
+      badge.className = entry.status === 'synced' ? 'badge-synced'
+                    : entry.status === 'error'  ? 'badge-error'
+                    : 'badge-pending';
+      badge.textContent = entry.status;
+      firstCell.appendChild(badge);
+    }
+    body.appendChild(tr);
+  });
+
+  updateStatus();
+}
+
+document.getElementById('searchBox').addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  if (!q) { renderMergedRecords(); return; }
+  const all = document.querySelectorAll('#recordsBody tr');
+  all.forEach(tr => {
+    const txt = tr.textContent.toLowerCase();
+    tr.style.display = txt.includes(q) ? '' : 'none';
+  });
+});
+
+document.getElementById('refreshBtn').addEventListener('click', loadRecords);
+
+/* ---------- Init ---------- */
+
+/* Auto-retry pending on page load */
+window.addEventListener('load', () => {
+  buildForm({});
+  loadDropdowns();
+  loadRecords();
+  kickSync();
+  setInterval(() => {
+    if (getQueue().some(r => r.status === 'pending' || r.status === 'error')) kickSync();
+  }, 15000);
+});
+</script>
+</body>
+</html>
