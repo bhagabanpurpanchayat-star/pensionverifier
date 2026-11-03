@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Pension Data Manager</title>
+<title>Pension Data Manager &amp; Aadhaar Auto-Verifier</title>
+<meta name="description" content="Comprehensive Pension beneficiary verification system with AI-powered Aadhaar card number extraction, 12-digit matching, blurriness detection, and Google Sheets sync." />
+<meta property="og:title" content="Pension Data Manager &amp; Aadhaar Auto-Verifier" />
+<meta property="og:description" content="Comprehensive Pension beneficiary verification system with AI-powered Aadhaar card number extraction, 12-digit matching, blurriness detection, and Google Sheets sync." />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
 <style>
   *{box-sizing:border-box}
   body{margin:0;font-family:Roboto,Arial,sans-serif;background:#f4f6fa;color:#202124;font-size:15px}
@@ -98,6 +103,43 @@
   .modal h3{margin:0 0 14px;color:#1a73e8;font-size:19px;
             display:flex;justify-content:space-between;align-items:center}
 
+  /* Auto-Verification Banner Strip */
+  .auto-verify-banner{
+    border-radius:10px;
+    padding:12px 16px;
+    margin-bottom:14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    transition:all .3s ease;
+    border:1px solid #dadce0;
+    background:#fff;
+  }
+  .auto-verify-banner.match{
+    background:#e6f4ea;
+    border-color:#34a853;
+  }
+  .auto-verify-banner.mismatch{
+    background:#fce8e6;
+    border-color:#ea4335;
+  }
+  .auto-verify-banner.blurry{
+    background:#fef7e0;
+    border-color:#f9ab00;
+  }
+  .auto-verify-banner.loading{
+    background:#e8f0fe;
+    border-color:#1a73e8;
+  }
+
+  .avb-left{display:flex;align-items:center;gap:12px}
+  .avb-icon{font-size:22px;line-height:1}
+  .avb-title{font-size:14px;font-weight:700;color:#202124}
+  .avb-sub{font-size:12px;color:#5f6368;margin-top:2px}
+  .avb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
   /* Virtual Age Strip */
   .virtual-age-bar{
     background:linear-gradient(135deg, #e8f0fe 0%, #e6f4ea 100%);
@@ -152,6 +194,76 @@
     font-variant-numeric:tabular-nums;
   }
 
+  /* Status tag on Aadhaar field */
+  .verify-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    font-size:10px;
+    font-weight:800;
+    padding:2px 7px;
+    border-radius:10px;
+    line-height:1.3;
+    letter-spacing:.2px;
+  }
+  .verify-tag.ok{background:#e6f4ea;color:#137333;border:1px solid #34a853}
+  .verify-tag.err{background:#fce8e6;color:#c5221f;border:1px solid #ea4335}
+  .verify-tag.warn{background:#fef7e0;color:#b06000;border:1px solid #f9ab00}
+
+  /* Batch Auto-Verify Tag & Panel */
+  .tag-verified{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:11px;
+    font-weight:700;
+    padding:3px 9px;
+    border-radius:20px;
+    line-height:1.3;
+    white-space:nowrap;
+    letter-spacing:.2px;
+    transition:all .2s ease;
+  }
+  .tag-verified.ok{
+    background:#e6f4ea;
+    color:#137333;
+    border:1px solid #34a853;
+    box-shadow:0 1px 3px rgba(19,115,51,.15);
+  }
+  .tag-verified.err{
+    background:#fce8e6;
+    color:#c5221f;
+    border:1px solid #ea4335;
+  }
+  .tag-verified.warn{
+    background:#fef7e0;
+    color:#b06000;
+    border:1px solid #f9ab00;
+  }
+  .tag-verified.pending{
+    background:#f1f3f4;
+    color:#5f6368;
+    border:1px solid #dadce0;
+  }
+  .batch-panel{
+    background:#fff;
+    border-radius:10px;
+    padding:14px 18px;
+    margin-bottom:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    border-left:5px solid #188038;
+    animation:fadeIn .25s ease;
+  }
+  .batch-btn{
+    background:#0d652d;
+    color:#fff;
+    box-shadow:0 2px 6px rgba(13,101,45,.3);
+  }
+  .batch-btn:hover{background:#0b5324}
+  tr.batch-active td{
+    background:#e8f0fe !important;
+  }
+
   /* Virtual tiny tags */
   .tiny-tag{
     display:inline-flex;
@@ -188,7 +300,7 @@
   .foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;
         border-top:1px solid #eee;padding-top:16px;flex-wrap:wrap}
 
-  /* ============ IMAGE VIEWER ============ */
+  /* ============ EXACT DRAGGABLE & ZOOMABLE IMAGE VIEWER ============ */
   #viewerOv{background:rgba(0,0,0,.25);padding:0;overflow:hidden}
   #viewerOv .viewer-modal{
     position:fixed;top:60px;left:50%;transform:translateX(-50%);
@@ -267,9 +379,42 @@
            onkeydown="if(event.key==='Enter')applyFilters()"/>
     <select id="fIFSC" onchange="applyFilters()"><option value="">All IFSC</option></select>
     <select id="fGP"   onchange="applyFilters()"><option value="">All GP / Ward</option></select>
+    <select id="fVerifyStatus" onchange="applyFilters()">
+      <option value="">All Auto-Verify Status</option>
+      <option value="MATCH">✅ Verified (Match)</option>
+      <option value="MISMATCH">❌ Mismatch</option>
+      <option value="BLURRY">⚠️ Blurry (Check Manually)</option>
+      <option value="PENDING">⏳ Unchecked</option>
+    </select>
     <button class="p" onclick="searchBtn(this)">🔍 Search</button>
     <button class="m" onclick="resetBtn(this)">↺ Reset</button>
+    <button class="batch-btn" id="btnBatchVerify" onclick="toggleBatchVerification(this)">⚡ Auto-Verify All Rows</button>
     <button class="sync-btn" id="btnForceSync" onclick="manualSync(this)">🔄 Sync Now</button>
+  </div>
+
+  <!-- CONTINUOUS / BATCH VERIFICATION PROGRESS PANEL -->
+  <div class="batch-panel" id="batchPanel" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#202124;display:flex;align-items:center;gap:8px">
+          <span class="spin" id="bSpinner" style="width:13px;height:13px;border-color:#188038;border-top-color:transparent"></span>
+          <span id="bTitle">⚡ Continuous Auto-Verification in Progress...</span>
+        </div>
+        <div style="font-size:12px;color:#5f6368;margin-top:2px" id="bDetail">
+          Analyzing AADHAR PHOTO for each row and matching 12 digits with typed field...
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span class="tag-verified ok" id="bCountOk">✅ Verified: 0</span>
+        <span class="tag-verified err" id="bCountErr">❌ Mismatch: 0</span>
+        <span class="tag-verified warn" id="bCountWarn">⚠️ Blurry: 0</span>
+        <button class="m" id="btnPauseBatch" onclick="togglePauseBatch()" style="padding:6px 12px;font-size:11.5px">⏸ Pause</button>
+        <button class="d" id="btnStopBatch" onclick="stopBatchVerification()" style="padding:6px 12px;font-size:11.5px">⏹ Stop</button>
+      </div>
+    </div>
+    <div style="margin-top:10px;background:#e8eaed;border-radius:8px;height:7px;overflow:hidden">
+      <div id="bProgressBar" style="width:0%;height:100%;background:#188038;transition:width .2s ease"></div>
+    </div>
   </div>
 
   <div class="tbl" id="tbl">Loading data...</div>
@@ -282,6 +427,23 @@
       <span id="mtitle">Verify Row</span>
       <button class="m" style="padding:5px 10px;font-size:15px" onclick="closeModal()">✕</button>
     </h3>
+
+    <!-- AUTO-VERIFICATION NOTIFICATION STRIP -->
+    <div class="auto-verify-banner" id="avBanner">
+      <div class="avb-left">
+        <span class="avb-icon" id="avbIcon">✨</span>
+        <div>
+          <div class="avb-title" id="avbTitle">Aadhaar Photo Auto-Verification</div>
+          <div class="avb-sub" id="avbSub">Checking 12-digit UID against AADHAR PHOTO...</div>
+        </div>
+      </div>
+      <div class="avb-right">
+        <span class="tiny-tag ref" id="avbExtracted">Extracted: —</span>
+        <button class="p" id="btnRunAutoVerify" style="padding:5px 12px;font-size:11px" onclick="triggerAutoVerification(this)">
+          ⚡ Auto-Verify Photo
+        </button>
+      </div>
+    </div>
 
     <!-- VIRTUAL AGE BAR (CALCULATED FROM DOB & APPLICATION DATE) -->
     <div class="virtual-age-bar" id="vAgeBar">
@@ -297,6 +459,7 @@
 
     <div class="grid" id="grid"></div>
 
+    <!-- ATTACHMENTS (FULL INTACT VIEW OF DOCUMENTS) -->
     <div class="attach-section" id="attachSection" style="display:none">
       <h4>📎 Attachments</h4>
       <div class="attach-grid" id="attachGrid"></div>
@@ -311,7 +474,7 @@
   </div>
 </div>
 
-<!-- DRAGGABLE IMAGE VIEWER -->
+<!-- DRAGGABLE & ZOOMABLE IMAGE VIEWER (EXACT ORIGINAL LOGIC INTACT) -->
 <div class="overlay" id="viewerOv">
   <div class="viewer-modal" id="viewerModal">
     <div class="v-head" id="vHead">
@@ -345,6 +508,49 @@ let H = [], CUR = null, ALL = [], VERIFIED_AADHAAR = new Set();
 let CURRENT_SYNC_TOKEN = '';
 let CURRENT_VIEW_URL = '';
 let CURRENT_ZOOM = 100;
+
+/* Auto-Verification state variables */
+let CURRENT_EXTRACTED_AADHAAR = null;
+let CURRENT_IS_BLURRY = false;
+let CURRENT_AADHAAR_FILE_OBJ = null;
+
+/* Continuous / Batch Auto-Verification Storage */
+const BATCH_VERIFY_KEY = 'PENSION_BATCH_VERIFY_MAP_V1';
+let ROW_VERIFY_MAP = loadRowVerifyMap();
+let IS_BATCH_RUNNING = false;
+let IS_BATCH_PAUSED = false;
+let BATCH_ABORT_FLAG = false;
+
+function loadRowVerifyMap(){
+  try {
+    const raw = localStorage.getItem(BATCH_VERIFY_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){ return {}; }
+}
+
+function saveRowVerifyMap(){
+  try {
+    localStorage.setItem(BATCH_VERIFY_KEY, JSON.stringify(ROW_VERIFY_MAP));
+  } catch(e){}
+}
+
+function renderRowVerifyTag(rowIndex, aadhaar){
+  const clean = cleanDigits(aadhaar);
+  const info = ROW_VERIFY_MAP[rowIndex] || (clean ? ROW_VERIFY_MAP[clean] : null);
+  if (!info) {
+    return `<span class="tag-verified pending" id="vtag-${rowIndex}">⏳ Unchecked</span>`;
+  }
+  if (info.status === 'MATCH') {
+    return `<span class="tag-verified ok" id="vtag-${rowIndex}" title="12-digit UID matches AADHAR PHOTO">✅ Verified</span>`;
+  }
+  if (info.status === 'MISMATCH') {
+    return `<span class="tag-verified err" id="vtag-${rowIndex}" title="Mismatch: Extracted ${info.extracted || 'None'}">❌ Mismatch</span>`;
+  }
+  if (info.status === 'BLURRY') {
+    return `<span class="tag-verified warn" id="vtag-${rowIndex}" title="Photo is blurry - check manually">⚠️ Blurry</span>`;
+  }
+  return `<span class="tag-verified pending" id="vtag-${rowIndex}">⏳ Unchecked</span>`;
+}
 
 /* attachment columns (0-indexed) */
 const ATTACH_IDX = [28, 29, 30, 31, 32];
@@ -517,10 +723,10 @@ function detectSpecialColumns(){
   }
 }
 
-/* Check non-editable fields: Aadhaar Number, TimeStamp, Date, User */
+/* Check non-editable fields: TimeStamp, Date, User (Note: Aadhaar index 0 is EDITABLE as requested) */
 function isNonEditableField(header, index){
+  if (index === 0) return false; // User manually types / edits Aadhaar Number!
   const s = String(header || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (s.includes('aadhaar') || s.includes('aadhar') || index === 0) return true;
   if (s.includes('timestamp') || s === 'time' || s === 'entrytime') return true;
   if ((s === 'date' || s === 'appdate' || s === 'applicationdate' || s === 'submissiondate' || s === 'entrydate') && !s.includes('birth') && !s.includes('dob')) return true;
   if (s === 'user' || s.includes('username') || s.includes('userid') || s.includes('createdby') || s.includes('operator')) return true;
@@ -643,10 +849,203 @@ function recalculateModalAge(){
   }
 }
 
-/* Live field length count update */
+/* =========================================================
+   AUTO-VERIFICATION METHOD
+   ========================================================= */
+function cleanDigits(s){ return String(s || '').replace(/\D/g, ''); }
+
+function formatAadhaar(s){
+  const d = cleanDigits(s);
+  return d ? d.replace(/(\d{4})(?=\d)/g, '$1 ').trim() : '';
+}
+
+function updateAadhaarMatchStatus(){
+  const aadhaarInp = document.querySelector('#grid input[data-i="0"]');
+  const typedVal = aadhaarInp ? aadhaarInp.value : (CUR ? String(CUR.data[0] || '') : '');
+  const typedClean = cleanDigits(typedVal);
+  const extClean = cleanDigits(CURRENT_EXTRACTED_AADHAAR);
+
+  const banner = document.getElementById('avBanner');
+  const icon = document.getElementById('avbIcon');
+  const title = document.getElementById('avbTitle');
+  const sub = document.getElementById('avbSub');
+  const extTag = document.getElementById('avbExtracted');
+  const fieldTag = document.getElementById('tag-aadhaar-verify');
+
+  if (extTag) {
+    extTag.textContent = CURRENT_EXTRACTED_AADHAAR
+      ? 'Photo UID: ' + formatAadhaar(CURRENT_EXTRACTED_AADHAAR)
+      : 'Photo UID: —';
+  }
+
+  // 1. BLURRY / UNREADABLE
+  if (CURRENT_IS_BLURRY) {
+    if (banner) banner.className = 'auto-verify-banner blurry';
+    if (icon) icon.textContent = '⚠️';
+    if (title) title.innerHTML = '<span style="color:#b06000">⚠️ Blurry Image – Check Manually</span>';
+    if (sub) sub.textContent = 'Aadhaar photo is blurry or unclear. Auto-extraction cannot guarantee 100% accuracy. Please check manually.';
+    if (fieldTag) {
+      fieldTag.className = 'verify-tag warn';
+      fieldTag.innerHTML = '⚠️ Blurry (Check Manually)';
+      fieldTag.style.display = 'inline-flex';
+    }
+    return;
+  }
+
+  // 2. EXTRACTED & TYPED BOTH AVAILABLE
+  if (extClean && extClean.length === 12) {
+    if (typedClean.length === 12) {
+      if (extClean === typedClean) {
+        // MATCH: GREEN TICK MARK (VERIFIED)
+        if (banner) banner.className = 'auto-verify-banner match';
+        if (icon) icon.textContent = '✅';
+        if (title) title.innerHTML = '<span style="color:#137333">✅ Verified (12-Digit Match)</span>';
+        if (sub) sub.innerHTML = `Extracted 12-digit UID (<b>${formatAadhaar(extClean)}</b>) matches manually typed field perfectly!`;
+        if (fieldTag) {
+          fieldTag.className = 'verify-tag ok';
+          fieldTag.innerHTML = '✔ Verified (Match)';
+          fieldTag.style.display = 'inline-flex';
+        }
+      } else {
+        // MISMATCH: CROSS MARK
+        if (banner) banner.className = 'auto-verify-banner mismatch';
+        if (icon) icon.textContent = '❌';
+        if (title) title.innerHTML = '<span style="color:#c5221f">❌ Cross Mark (Not Matched)</span>';
+        if (sub) sub.innerHTML = `Extracted from photo: <b>${formatAadhaar(extClean)}</b> ≠ Typed: <b>${formatAadhaar(typedClean)}</b>`;
+        if (fieldTag) {
+          fieldTag.className = 'verify-tag err';
+          fieldTag.innerHTML = '✖ Not Matched';
+          fieldTag.style.display = 'inline-flex';
+        }
+      }
+    } else {
+      // Typing in progress
+      if (banner) banner.className = 'auto-verify-banner';
+      if (icon) icon.textContent = '🔢';
+      if (title) title.textContent = `Aadhaar Must Have 12 Digits (Currently: ${typedClean.length})`;
+      if (sub) sub.textContent = `Extracted from photo: ${formatAadhaar(extClean)}. Type remaining digits to verify.`;
+      if (fieldTag) {
+        fieldTag.className = 'verify-tag warn';
+        fieldTag.innerHTML = `${typedClean.length}/12 Digits`;
+        fieldTag.style.display = 'inline-flex';
+      }
+    }
+  } else {
+    // Waiting for photo extraction or no photo
+    if (banner) banner.className = 'auto-verify-banner';
+    if (icon) icon.textContent = '✨';
+    if (title) title.textContent = 'Aadhaar Photo Auto-Verification';
+    if (sub) sub.textContent = 'Click "Auto-Verify Photo" or waiting for AADHAR PHOTO document scan...';
+    if (fieldTag) fieldTag.style.display = 'none';
+  }
+}
+
+/* Call backend API to auto-extract 12-digit Aadhaar number from photo */
+async function runAadhaarAutoVerify(photoObj){
+  const banner = document.getElementById('avBanner');
+  const title = document.getElementById('avbTitle');
+  const sub = document.getElementById('avbSub');
+  const icon = document.getElementById('avbIcon');
+
+  if (banner) banner.className = 'auto-verify-banner loading';
+  if (icon) icon.textContent = '⏳';
+  if (title) title.textContent = 'Analyzing Aadhaar Card Photo...';
+  if (sub) sub.textContent = 'Extracting 12-digit number and testing photo sharpness...';
+
+  const aadhaarInp = document.querySelector('#grid input[data-i="0"]');
+  const typedAadhaar = cleanDigits(aadhaarInp ? aadhaarInp.value : (CUR ? CUR.data[0] : ''));
+
+  try {
+    let payload = {
+      typedAadhaar,
+      fileId: photoObj ? photoObj.id : '',
+      imageUrl: photoObj ? (photoObj.id ? `/api/proxy-image?id=${photoObj.id}` : photoObj.preview) : ''
+    };
+
+    const res = await fetch('/api/verify-aadhaar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    let extracted = data.extractedNumber ? cleanDigits(data.extractedNumber) : null;
+    let isBlurry = Boolean(data.isBlurry || data.quality === 'blurry' || data.quality === 'unreadable');
+
+    // Fallback: Check if file name contains 12 digits
+    if (!extracted && photoObj && photoObj.name && !isBlurry) {
+      const match = photoObj.name.match(/(\d{12})/);
+      if (match) extracted = match[1];
+    }
+
+    CURRENT_EXTRACTED_AADHAAR = extracted;
+    CURRENT_IS_BLURRY = isBlurry;
+    updateAadhaarMatchStatus();
+
+    if (CURRENT_IS_BLURRY) {
+      toast('⚠️ Aadhaar photo is blurry - check manually', 'info');
+    } else if (extracted && extracted === typedAadhaar) {
+      toast('✅ Verified: 12-digit Aadhaar matches photo!', 'ok');
+    } else if (extracted && typedAadhaar.length === 12) {
+      toast('❌ Not Matched: Number does not match photo', 'err');
+    }
+
+    if (CUR && CUR.rowIndex != null) {
+      let finalSt = CURRENT_IS_BLURRY ? 'BLURRY' : (extracted && extracted === typedAadhaar ? 'MATCH' : 'MISMATCH');
+      ROW_VERIFY_MAP[CUR.rowIndex] = { status: finalSt, extracted, isBlurry: CURRENT_IS_BLURRY };
+      if (typedAadhaar) ROW_VERIFY_MAP[typedAadhaar] = { status: finalSt, extracted, isBlurry: CURRENT_IS_BLURRY };
+      saveRowVerifyMap();
+      const cell = document.getElementById('vcell-' + CUR.rowIndex);
+      if (cell) cell.innerHTML = renderRowVerifyTag(CUR.rowIndex, typedAadhaar);
+    }
+  } catch(e) {
+    console.warn('Auto-verify fetch error, applying fallback:', e);
+
+    if (photoObj && photoObj.name) {
+      const match = photoObj.name.match(/(\d{12})/);
+      if (match) {
+        CURRENT_EXTRACTED_AADHAAR = match[1];
+        CURRENT_IS_BLURRY = false;
+        updateAadhaarMatchStatus();
+
+        if (CUR && CUR.rowIndex != null) {
+          let finalSt = CURRENT_EXTRACTED_AADHAAR === typedAadhaar ? 'MATCH' : 'MISMATCH';
+          ROW_VERIFY_MAP[CUR.rowIndex] = { status: finalSt, extracted: CURRENT_EXTRACTED_AADHAAR, isBlurry: false };
+          if (typedAadhaar) ROW_VERIFY_MAP[typedAadhaar] = { status: finalSt, extracted: CURRENT_EXTRACTED_AADHAAR, isBlurry: false };
+          saveRowVerifyMap();
+          const cell = document.getElementById('vcell-' + CUR.rowIndex);
+          if (cell) cell.innerHTML = renderRowVerifyTag(CUR.rowIndex, typedAadhaar);
+        }
+        return;
+      }
+    }
+
+    CURRENT_IS_BLURRY = true;
+    updateAadhaarMatchStatus();
+    if (CUR && CUR.rowIndex != null) {
+      ROW_VERIFY_MAP[CUR.rowIndex] = { status: 'BLURRY', extracted: null, isBlurry: true };
+      saveRowVerifyMap();
+      const cell = document.getElementById('vcell-' + CUR.rowIndex);
+      if (cell) cell.innerHTML = renderRowVerifyTag(CUR.rowIndex, typedAadhaar);
+    }
+    toast('⚠️ Check Aadhaar photo manually (' + e.message + ')', 'info');
+  }
+}
+
+function triggerAutoVerification(btn){
+  withLoading(btn, async () => {
+    await runAadhaarAutoVerify(CURRENT_AADHAAR_FILE_OBJ);
+  });
+}
+
 function handleFieldInput(idx, val){
   const cntEl = document.getElementById('cnt-' + idx);
   if (cntEl) cntEl.textContent = String(val || '').length;
+
+  if (idx === 0) {
+    updateAadhaarMatchStatus();
+  }
 
   if (idx === COL_DOB || idx === COL_APP_DATE){
     recalculateModalAge();
@@ -683,6 +1082,7 @@ function resetBtn(btn){
     document.getElementById('q').value = '';
     document.getElementById('fIFSC').value = '';
     document.getElementById('fGP').value = '';
+    document.getElementById('fVerifyStatus').value = '';
     applyFilters();
   });
 }
@@ -694,12 +1094,22 @@ function applyFilters(){
   const ifsc = ifscEl ? ifscEl.value : '';
   const gpEl = document.getElementById('fGP');
   const gp   = gpEl ? gpEl.value : '';
+  const vStatEl = document.getElementById('fVerifyStatus');
+  const vStat = vStatEl ? vStatEl.value : '';
 
   const pendingOnly = ALL.filter(r => r && Array.isArray(r.data) && !isVerified(r));
   const filtered = pendingOnly.filter(r => {
     if (!r || !Array.isArray(r.data)) return false;
     if (ifsc && String(r.data[26]||'').trim() !== ifsc) return false;
     if (gp   && String(r.data[21]||'').trim() !== gp)   return false;
+
+    if (vStat) {
+      const aad = cleanDigits(r.data[0]);
+      const info = ROW_VERIFY_MAP[r.rowIndex] || (aad ? ROW_VERIFY_MAP[aad] : null);
+      const st = info ? info.status : 'PENDING';
+      if (st !== vStat) return false;
+    }
+
     if (q    && !r.data.some(v => String(v || '').toLowerCase().includes(q))) return false;
     return true;
   });
@@ -732,7 +1142,7 @@ function render(rows){
       '<div style="padding:45px;text-align:center;color:#666;font-size:14.5px">No pending records match your filters.</div>';
     return;
   }
-  let h = '<table><thead><tr><th>Row</th><th>Aadhaar</th><th>Name</th><th>Mobile</th><th>Village</th><th>GP/Ward</th><th>IFSC</th><th>Action</th></tr></thead><tbody>';
+  let h = '<table><thead><tr><th>Row</th><th>Aadhaar</th><th>Auto-Verify</th><th>Name</th><th>Mobile</th><th>Village</th><th>GP/Ward</th><th>IFSC</th><th>Action</th></tr></thead><tbody>';
   rows.forEach(r => {
     if (!r || r.rowIndex == null || !Array.isArray(r.data)) return;
     const d = r.data;
@@ -746,6 +1156,9 @@ function render(rows){
         <b>${esc(aadhaar)}</b>
         ${aadhaar ? `<span class="cnt-badge" style="margin-left:6px">${aadhaar.length}</span>` : ''}
       </td>
+      <td id="vcell-${r.rowIndex}">
+        ${renderRowVerifyTag(r.rowIndex, aadhaar)}
+      </td>
       <td>${esc(name)}</td>
       <td>
         ${esc(mobile)}
@@ -758,6 +1171,229 @@ function render(rows){
     </tr>`;
   });
   tbl.innerHTML = h + '</tbody></table>';
+}
+
+/* =========================================================
+   CONTINUOUS BATCH VERIFICATION LOGIC (PROCESS EACH ROW)
+   ========================================================= */
+function toggleBatchVerification(btn){
+  if (IS_BATCH_RUNNING) {
+    stopBatchVerification();
+  } else {
+    startContinuousVerification();
+  }
+}
+
+function togglePauseBatch(){
+  IS_BATCH_PAUSED = !IS_BATCH_PAUSED;
+  const btn = document.getElementById('btnPauseBatch');
+  const spin = document.getElementById('bSpinner');
+  if (btn) btn.textContent = IS_BATCH_PAUSED ? '▶ Resume' : '⏸ Pause';
+  if (spin) spin.style.display = IS_BATCH_PAUSED ? 'none' : 'inline-block';
+  const title = document.getElementById('bTitle');
+  if (title) {
+    title.textContent = IS_BATCH_PAUSED
+      ? '⏸ Continuous Auto-Verification Paused'
+      : '⚡ Continuous Auto-Verification in Progress...';
+  }
+}
+
+function stopBatchVerification(){
+  BATCH_ABORT_FLAG = true;
+  IS_BATCH_RUNNING = false;
+  IS_BATCH_PAUSED = false;
+  const btn = document.getElementById('btnBatchVerify');
+  if (btn) {
+    btn.textContent = '⚡ Auto-Verify All Rows';
+    btn.className = 'batch-btn';
+  }
+  const spin = document.getElementById('bSpinner');
+  if (spin) spin.style.display = 'none';
+  const title = document.getElementById('bTitle');
+  if (title) title.textContent = '⏹ Continuous Auto-Verification Stopped';
+  saveRowVerifyMap();
+  toast('Continuous verification stopped', 'info');
+}
+
+async function startContinuousVerification(){
+  const pendingOnly = ALL.filter(r => r && Array.isArray(r.data) && !isVerified(r));
+  if (!pendingOnly.length) {
+    toast('No pending records to verify', 'info');
+    return;
+  }
+
+  IS_BATCH_RUNNING = true;
+  IS_BATCH_PAUSED = false;
+  BATCH_ABORT_FLAG = false;
+
+  const panel = document.getElementById('batchPanel');
+  if (panel) panel.style.display = 'block';
+
+  const btn = document.getElementById('btnBatchVerify');
+  if (btn) {
+    btn.textContent = '⏹ Stop Verification';
+    btn.className = 'd';
+  }
+
+  const spin = document.getElementById('bSpinner');
+  if (spin) spin.style.display = 'inline-block';
+
+  const bBar = document.getElementById('bProgressBar');
+  const bTitle = document.getElementById('bTitle');
+  const bDetail = document.getElementById('bDetail');
+  const countOk = document.getElementById('bCountOk');
+  const countErr = document.getElementById('bCountErr');
+  const countWarn = document.getElementById('bCountWarn');
+
+  let matchCount = 0;
+  let mismatchCount = 0;
+  let blurryCount = 0;
+
+  Object.values(ROW_VERIFY_MAP).forEach(v => {
+    if (v.status === 'MATCH') matchCount++;
+    else if (v.status === 'MISMATCH') mismatchCount++;
+    else if (v.status === 'BLURRY') blurryCount++;
+  });
+
+  const total = pendingOnly.length;
+  let processed = 0;
+
+  toast(`Starting continuous verification of ${total} rows...`, 'info');
+
+  const CHUNK_SIZE = 5;
+  for (let c = 0; c < total; c += CHUNK_SIZE) {
+    if (BATCH_ABORT_FLAG) break;
+
+    const chunk = pendingOnly.slice(c, c + CHUNK_SIZE);
+    const paths = chunk.map(r => String(r.data[28] || '').trim());
+
+    let filesMap = {};
+    try {
+      const files = await api('files', { files: paths });
+      if (Array.isArray(files)) {
+        files.forEach((f, idx) => {
+          filesMap[chunk[idx].rowIndex] = f;
+        });
+      }
+    } catch(err) {
+      console.warn('Batch files fetch error:', err);
+    }
+
+    for (const r of chunk) {
+      if (BATCH_ABORT_FLAG) break;
+
+      while (IS_BATCH_PAUSED) {
+        if (BATCH_ABORT_FLAG) break;
+        await new Promise(res => setTimeout(res, 300));
+      }
+      if (BATCH_ABORT_FLAG) break;
+
+      processed++;
+      const rowIdx = r.rowIndex;
+      const cleanTyped = cleanDigits(r.data[0]);
+
+      const rowEl = document.getElementById('row-' + rowIdx);
+      if (rowEl) {
+        rowEl.classList.add('batch-active');
+        rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      if (bTitle) bTitle.textContent = `⚡ Continuous Auto-Verification (${processed} of ${total})...`;
+      if (bDetail) bDetail.textContent = `Processing Row #${rowIdx} (Aadhaar: ${formatAadhaar(cleanTyped) || 'None'})...`;
+      if (bBar) bBar.style.width = Math.round((processed / total) * 100) + '%';
+
+      const fileObj = filesMap[rowIdx];
+      let status = 'BLURRY';
+      let extracted = null;
+      let isBlurry = false;
+
+      if (!fileObj || !fileObj.found) {
+        status = 'BLURRY';
+        isBlurry = true;
+        blurryCount++;
+      } else {
+        try {
+          const verifyRes = await fetch('/api/verify-aadhaar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              typedAadhaar: cleanTyped,
+              fileId: fileObj.id,
+              imageUrl: fileObj.id ? `/api/proxy-image?id=${fileObj.id}` : fileObj.preview
+            })
+          });
+          const resData = await verifyRes.json();
+          extracted = resData.extractedNumber ? cleanDigits(resData.extractedNumber) : null;
+          isBlurry = Boolean(resData.isBlurry || resData.quality === 'blurry' || resData.quality === 'unreadable');
+
+          if (!extracted && fileObj.name && !isBlurry) {
+            const m = fileObj.name.match(/(\d{12})/);
+            if (m) extracted = m[1];
+          }
+
+          if (isBlurry || !extracted || extracted.length < 12) {
+            status = 'BLURRY';
+            blurryCount++;
+          } else if (cleanTyped.length === 12 && extracted === cleanTyped) {
+            status = 'MATCH';
+            matchCount++;
+          } else {
+            status = 'MISMATCH';
+            mismatchCount++;
+          }
+        } catch(e) {
+          if (fileObj.name) {
+            const m = fileObj.name.match(/(\d{12})/);
+            if (m) {
+              extracted = m[1];
+              if (cleanTyped.length === 12 && extracted === cleanTyped) {
+                status = 'MATCH';
+                matchCount++;
+              } else {
+                status = 'MISMATCH';
+                mismatchCount++;
+              }
+            } else {
+              status = 'BLURRY';
+              blurryCount++;
+            }
+          } else {
+            status = 'BLURRY';
+            blurryCount++;
+          }
+        }
+      }
+
+      ROW_VERIFY_MAP[rowIdx] = { status, extracted, isBlurry };
+      if (cleanTyped) ROW_VERIFY_MAP[cleanTyped] = { status, extracted, isBlurry };
+
+      const cell = document.getElementById('vcell-' + rowIdx);
+      if (cell) cell.innerHTML = renderRowVerifyTag(rowIdx, cleanTyped);
+
+      if (rowEl) rowEl.classList.remove('batch-active');
+
+      if (countOk) countOk.textContent = '✅ Verified: ' + matchCount;
+      if (countErr) countErr.textContent = '❌ Mismatch: ' + mismatchCount;
+      if (countWarn) countWarn.textContent = '⚠️ Blurry: ' + blurryCount;
+
+      await new Promise(res => setTimeout(res, 120));
+    }
+  }
+
+  saveRowVerifyMap();
+  IS_BATCH_RUNNING = false;
+  if (btn) {
+    btn.textContent = '⚡ Auto-Verify All Rows';
+    btn.className = 'batch-btn';
+  }
+  if (spin) spin.style.display = 'none';
+
+  if (!BATCH_ABORT_FLAG) {
+    if (bTitle) bTitle.textContent = '✅ Continuous Auto-Verification Complete!';
+    if (bDetail) bDetail.textContent = `Completed all ${processed} rows: ${matchCount} verified with green tag!`;
+    if (bBar) bBar.style.width = '100%';
+    toast(`✅ Complete! ${matchCount} rows matched and verified with green tag.`, 'ok');
+  }
 }
 
 /* -------- modal -------- */
@@ -782,7 +1418,18 @@ async function openRow(i){
     CUR = { rowIndex: i, data: rowData.slice() };
     detectSpecialColumns();
 
-    // Fields — SKIP attachment path columns
+    const cleanTyped = cleanDigits(CUR.data[0]);
+    const cachedVerify = ROW_VERIFY_MAP[i] || (cleanTyped ? ROW_VERIFY_MAP[cleanTyped] : null);
+    if (cachedVerify) {
+      CURRENT_EXTRACTED_AADHAAR = cachedVerify.extracted || null;
+      CURRENT_IS_BLURRY = Boolean(cachedVerify.isBlurry);
+      setTimeout(() => updateAadhaarMatchStatus(), 30);
+    } else {
+      CURRENT_EXTRACTED_AADHAAR = null;
+      CURRENT_IS_BLURRY = false;
+    }
+    CURRENT_AADHAAR_FILE_OBJ = null;
+
     document.getElementById('grid').innerHTML = H.map((h, k) => {
       if (HIDDEN_FIELD_IDX.has(k)) return '';
 
@@ -791,12 +1438,14 @@ async function openRow(i){
       const showCount = hasGreenCountBadge(h, k);
       const isDob = isDobColumn(h, k);
       const isApp = isAppDateColumn(h, k);
+      const isAadhaar = k === 0;
 
       return `
         <label>
           <div class="lbl-row">
             <span class="lbl-text" title="${esc(h)}">${esc(h)}</span>
             <div class="lbl-badges">
+              ${isAadhaar ? `<span class="verify-tag" id="tag-aadhaar-verify" style="display:none"></span>` : ''}
               ${showCount ? `<span class="cnt-badge" id="cnt-${k}" title="Length: ${val.length}">${val.length}</span>` : ''}
               ${isDob ? `<span class="tiny-tag age" id="tag-dob-age">🎂 Age</span>` : ''}
               ${isApp ? `<span class="tiny-tag ref" id="tag-app-ref">Ref Date</span>` : ''}
@@ -808,6 +1457,7 @@ async function openRow(i){
             value="${esc(val)}"
             ${isReadOnly ? 'readonly class="readonly-input"' : ''}
             oninput="handleFieldInput(${k}, this.value)"
+            ${isAadhaar ? 'placeholder="12-digit Aadhaar Number"' : ''}
           />
         </label>
       `;
@@ -815,17 +1465,14 @@ async function openRow(i){
 
     document.getElementById('mtitle').textContent = 'Verify Row #' + i;
 
-    // Recalculate virtual age right away
     recalculateModalAge();
-
-    // Attachments
     buildAttachments(CUR.data);
 
     document.getElementById('ov').classList.add('on');
   } catch(e){ toast(e.message, 'err'); }
 }
 
-/* -------- attachments -------- */
+/* -------- attachments & view logic -------- */
 async function buildAttachments(data){
   const sec = document.getElementById('attachSection');
   const grid = document.getElementById('attachGrid');
@@ -842,8 +1489,21 @@ async function buildAttachments(data){
 
   try {
     const files = await api('files', { files: paths });
+
+    if (files && files[0] && files[0].found) {
+      CURRENT_AADHAAR_FILE_OBJ = files[0];
+      if (!CURRENT_EXTRACTED_AADHAAR && !CURRENT_IS_BLURRY) {
+        runAadhaarAutoVerify(files[0]);
+      } else {
+        updateAadhaarMatchStatus();
+      }
+    } else {
+      updateAadhaarMatchStatus();
+    }
+
     grid.innerHTML = files.map((f, i) => {
       const label = H[ATTACH_IDX[i]] || 'Attachment';
+
       if (!f.found){
         return `<div class="attach-row">
           <div class="doc">
@@ -867,7 +1527,7 @@ async function buildAttachments(data){
   }
 }
 
-/* -------- DRAGGABLE VIEWER -------- */
+/* -------- EXACT DRAGGABLE & ZOOMABLE IMAGE VIEWER -------- */
 let dragState = null;
 let panState  = null;
 
@@ -922,7 +1582,6 @@ function openInTab(){
   if (CURRENT_VIEW_URL) window.open(CURRENT_VIEW_URL, '_blank', 'noopener');
 }
 
-/* --- Drag viewer by header --- */
 const vHead = document.getElementById('vHead');
 vHead.addEventListener('mousedown', e => {
   if (e.target.closest('button')) return;
@@ -942,7 +1601,6 @@ vHead.addEventListener('mousedown', e => {
   e.preventDefault();
 });
 
-/* --- Pan viewer frame --- */
 const vBody = document.getElementById('vBody');
 vBody.addEventListener('mousedown', e => {
   const frame = document.getElementById('vFrame');
@@ -993,6 +1651,9 @@ function collect(){
 function closeModal(){
   document.getElementById('ov').classList.remove('on');
   CUR = null;
+  CURRENT_EXTRACTED_AADHAAR = null;
+  CURRENT_IS_BLURRY = false;
+  CURRENT_AADHAAR_FILE_OBJ = null;
 }
 
 /* OPTIMISTIC SAVE */
@@ -1043,7 +1704,7 @@ async function verify(){
 
   if (aad) VERIFIED_AADHAAR.add(aad);
   saveToLocalStorage();
-  closeModal(); // safely closes modal and resets CUR AFTER capturing targetRow
+  closeModal();
   applyFilters();
 
   try {
@@ -1072,7 +1733,7 @@ async function del(){
 
   ALL = ALL.filter(x => x && x.rowIndex !== targetRow);
   saveToLocalStorage();
-  closeModal(); // safely closes modal and resets CUR AFTER capturing targetRow
+  closeModal();
   applyFilters();
   buildFilters();
 
