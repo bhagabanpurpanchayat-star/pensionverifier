@@ -4,11 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Pension Data Manager &amp; Aadhaar Auto-Verifier</title>
-<meta name="description" content="Comprehensive Pension beneficiary verification system with AI-powered Aadhaar card number extraction, 12-digit matching, blurriness detection, and Google Sheets sync." />
-<meta property="og:title" content="Pension Data Manager &amp; Aadhaar Auto-Verifier" />
-<meta property="og:description" content="Comprehensive Pension beneficiary verification system with AI-powered Aadhaar card number extraction, 12-digit matching, blurriness detection, and Google Sheets sync." />
-<meta property="og:type" content="website" />
-<meta name="twitter:card" content="summary_large_image" />
 <style>
   *{box-sizing:border-box}
   body{margin:0;font-family:Roboto,Arial,sans-serif;background:#f4f6fa;color:#202124;font-size:15px}
@@ -20,13 +15,8 @@
   header .stats{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:500;flex-wrap:wrap}
   .badge{background:rgba(255,255,255,.2);padding:5px 12px;border-radius:20px}
   .badge b{font-size:14px}
-
-  /* Sync Indicator Pill */
-  .sync-status{
-    display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);
-    padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;
-    transition:background .2s;
-  }
+  .sync-status{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);
+    padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;transition:background .2s}
   .sync-status.ok{background:#188038;color:#fff}
   .sync-status.syncing{background:#f9ab00;color:#202124}
   .sync-status.err{background:#d93025;color:#fff}
@@ -35,13 +25,11 @@
   @keyframes pulse{from{opacity:.3}to{opacity:1}}
 
   .wrap{max-width:1400px;margin:0 auto;padding:20px 22px}
-
   .counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
   .card{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 2px 6px rgba(0,0,0,.07);
         border-left:5px solid #1a73e8;transition:transform .2s, box-shadow .2s}
   .card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.1)}
-  .card.ok{border-left-color:#188038}
-  .card.pending{border-left-color:#f9ab00}
+  .card.ok{border-left-color:#188038}.card.pending{border-left-color:#f9ab00}
   .card .num{font-size:30px;font-weight:700;line-height:1}
   .card .lbl{font-size:11.5px;text-transform:uppercase;color:#5f6368;letter-spacing:.5px;margin-top:6px}
 
@@ -57,11 +45,10 @@
   button{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;
          font-weight:600;font-size:13px;letter-spacing:.2px;
          transition:transform .12s ease, background .15s, box-shadow .15s, filter .15s;
-         position:relative;overflow:hidden;user-select:none;
-         display:inline-flex;align-items:center;justify-content:center;gap:6px}
+         user-select:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
   button:hover{filter:brightness(1.08)}
   button:active{transform:scale(.94);filter:brightness(.92)}
-  button:disabled{opacity:.65;cursor:not-allowed;transform:none !important}
+  button:disabled{opacity:.5;cursor:not-allowed;transform:none !important;filter:none !important}
   .p{background:#1a73e8;color:#fff;box-shadow:0 2px 6px rgba(26,115,232,.3)}
   .p:hover{background:#1557b0}
   .s{background:#188038;color:#fff;box-shadow:0 2px 6px rgba(24,128,56,.3)}
@@ -86,10 +73,7 @@
   tr{transition:background .2s, opacity .35s, transform .35s}
   tr:hover td{background:#fafbff}
   tr.verified-hide{animation:fadeOutRow .45s cubic-bezier(.4,0,.2,1) forwards}
-  @keyframes fadeOutRow{
-    from{opacity:1;transform:scale(1)}
-    to{opacity:0;transform:scale(.95) translateX(40px)}
-  }
+  @keyframes fadeOutRow{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.95) translateX(40px)}}
 
   .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
            z-index:100;overflow-y:auto;padding:20px;animation:fadeIn .22s ease}
@@ -98,184 +82,107 @@
   .modal{max-width:1200px;margin:30px auto;background:#fff;border-radius:14px;
          padding:24px 28px;box-shadow:0 20px 60px rgba(0,0,0,.35);
          animation:slideUp .3s cubic-bezier(.2,.8,.2,1)}
-  @keyframes slideUp{from{transform:translateY(40px);opacity:0}
-                     to{transform:translateY(0);opacity:1}}
+  @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
   .modal h3{margin:0 0 14px;color:#1a73e8;font-size:19px;
             display:flex;justify-content:space-between;align-items:center}
 
-  /* Auto-Verification Banner Strip */
-  .auto-verify-banner{
-    border-radius:10px;
-    padding:12px 16px;
-    margin-bottom:14px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:10px;
-    transition:all .3s ease;
-    border:1px solid #dadce0;
-    background:#fff;
-  }
-  .auto-verify-banner.match{
-    background:#e6f4ea;
-    border-color:#34a853;
-  }
-  .auto-verify-banner.mismatch{
-    background:#fce8e6;
-    border-color:#ea4335;
-  }
-  .auto-verify-banner.blurry{
-    background:#fef7e0;
-    border-color:#f9ab00;
-  }
-  .auto-verify-banner.loading{
-    background:#e8f0fe;
-    border-color:#1a73e8;
-  }
-
+  .auto-verify-banner{border-radius:10px;padding:12px 16px;margin-bottom:14px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    transition:all .3s ease;border:1px solid #dadce0;background:#fff}
+  .auto-verify-banner.match{background:#e6f4ea;border-color:#34a853}
+  .auto-verify-banner.mismatch{background:#fce8e6;border-color:#ea4335}
+  .auto-verify-banner.blurry{background:#fef7e0;border-color:#f9ab00}
+  .auto-verify-banner.loading{background:#e8f0fe;border-color:#1a73e8}
   .avb-left{display:flex;align-items:center;gap:12px}
   .avb-icon{font-size:22px;line-height:1}
   .avb-title{font-size:14px;font-weight:700;color:#202124}
   .avb-sub{font-size:12px;color:#5f6368;margin-top:2px}
   .avb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
-  /* Virtual Age Strip */
-  .virtual-age-bar{
-    background:linear-gradient(135deg, #e8f0fe 0%, #e6f4ea 100%);
-    border:1px solid #b7e1cd;
-    border-radius:10px;
-    padding:10px 14px;
-    margin-bottom:16px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:10px;
-  }
+  /* 3-CHECK PANEL */
+  .check-panel{background:linear-gradient(135deg,#f8f9fc 0%,#eef3fb 100%);
+    border:1px solid #c9d8ef;border-radius:10px;padding:14px 16px;margin-bottom:16px}
+  .check-panel-title{font-size:13px;font-weight:800;color:#174ea6;
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;
+    display:flex;align-items:center;justify-content:space-between}
+  .check-panel-title .progress-pill{background:#fff;color:#174ea6;padding:3px 10px;
+    border-radius:20px;font-size:11px;font-weight:800;border:1px solid #c9d8ef}
+  .check-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+  .check-card{background:#fff;border:2px solid #dadce0;border-radius:10px;
+    padding:12px 14px;cursor:pointer;transition:all .2s ease;
+    display:flex;align-items:center;gap:12px;user-select:none}
+  .check-card:hover{border-color:#1a73e8;box-shadow:0 2px 8px rgba(26,115,232,.15);transform:translateY(-1px)}
+  .check-card.pending{border-color:#f9ab00;background:#fef7e0;box-shadow:0 2px 8px rgba(249,171,0,.15)}
+  .check-card.checked{border-color:#34a853;background:#e6f4ea;box-shadow:0 2px 8px rgba(24,128,56,.15)}
+  .check-card.saving{border-color:#1a73e8;background:#e8f0fe;cursor:wait}
+  .check-card.error{border-color:#ea4335;background:#fce8e6}
+  .check-box{width:26px;height:26px;border-radius:6px;border:2px solid #dadce0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;font-weight:800;color:#fff;background:#fff;flex-shrink:0;
+    transition:all .2s ease}
+  .check-card.checked .check-box{background:#188038;border-color:#188038}
+  .check-card.pending .check-box{background:#f9ab00;border-color:#f9ab00}
+  .check-card.error .check-box{background:#d93025;border-color:#d93025}
+  .check-info{flex:1;min-width:0}
+  .check-name{font-size:13px;font-weight:700;color:#202124}
+  .check-status{font-size:11px;color:#5f6368;margin-top:2px;font-weight:500;
+                overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .check-card.checked .check-status{color:#137333;font-weight:700}
+  .check-card.pending .check-status{color:#b06000;font-weight:700}
+  .check-card.error .check-status{color:#c5221f;font-weight:700}
+
+  /* Verify gate */
+  .verify-gate{background:#fef7e0;border:1px solid #f9ab00;color:#b06000;
+    padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;
+    margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .verify-gate.ready{background:#e6f4ea;border-color:#34a853;color:#137333}
+
+  .virtual-age-bar{background:linear-gradient(135deg,#e8f0fe 0%,#e6f4ea 100%);
+    border:1px solid #b7e1cd;border-radius:10px;padding:10px 14px;margin-bottom:16px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
   .vab-left{display:flex;align-items:center;gap:10px}
   .vab-icon{font-size:18px}
   .vab-title{font-size:11.5px;font-weight:700;text-transform:uppercase;color:#174ea6;letter-spacing:.4px}
   .vab-value{font-size:14px;font-weight:800;color:#202124}
   .vab-right{display:flex;align-items:center;gap:8px}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
-        gap:11px 16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:11px 16px}
   .grid label{display:flex;flex-direction:column;font-size:11.5px;color:#5f6368;font-weight:600}
   .lbl-row{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:3px}
   .lbl-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .lbl-badges{display:flex;align-items:center;gap:5px;flex-shrink:0}
-
   .grid input{padding:9px 11px;border:1px solid #ccc;border-radius:7px;
               margin-top:2px;font-size:13px;transition:border-color .2s, box-shadow .2s}
-  .grid input:focus{outline:none;border-color:#1a73e8;
-                    box-shadow:0 0 0 3px rgba(26,115,232,.15)}
+  .grid input:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.15)}
+  input[readonly], .readonly-input{background:#f1f3f4 !important;color:#5f6368 !important;
+    cursor:not-allowed !important;border-color:#dadce0 !important;box-shadow:none !important;user-select:all}
 
-  /* Non-editable field styling */
-  input[readonly], .readonly-input{
-    background:#f1f3f4 !important;
-    color:#5f6368 !important;
-    cursor:not-allowed !important;
-    border-color:#dadce0 !important;
-    box-shadow:none !important;
-    user-select:all;
-  }
-
-  /* Small green count tag */
-  .cnt-badge{
-    background:#e6f4ea;
-    color:#137333;
-    font-size:10.5px;
-    font-weight:700;
-    padding:1px 6px;
-    border-radius:10px;
-    border:1px solid #ceead6;
-    line-height:1.4;
-    font-variant-numeric:tabular-nums;
-  }
-
-  /* Status tag on Aadhaar field */
-  .verify-tag{
-    display:inline-flex;
-    align-items:center;
-    gap:3px;
-    font-size:10px;
-    font-weight:800;
-    padding:2px 7px;
-    border-radius:10px;
-    line-height:1.3;
-    letter-spacing:.2px;
-  }
+  .cnt-badge{background:#e6f4ea;color:#137333;font-size:10.5px;font-weight:700;
+    padding:1px 6px;border-radius:10px;border:1px solid #ceead6;line-height:1.4;
+    font-variant-numeric:tabular-nums}
+  .verify-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;
+    padding:2px 7px;border-radius:10px;line-height:1.3;letter-spacing:.2px}
   .verify-tag.ok{background:#e6f4ea;color:#137333;border:1px solid #34a853}
   .verify-tag.err{background:#fce8e6;color:#c5221f;border:1px solid #ea4335}
   .verify-tag.warn{background:#fef7e0;color:#b06000;border:1px solid #f9ab00}
 
-  /* Batch Auto-Verify Tag & Panel */
-  .tag-verified{
-    display:inline-flex;
-    align-items:center;
-    gap:4px;
-    font-size:11px;
-    font-weight:700;
-    padding:3px 9px;
-    border-radius:20px;
-    line-height:1.3;
-    white-space:nowrap;
-    letter-spacing:.2px;
-    transition:all .2s ease;
-  }
-  .tag-verified.ok{
-    background:#e6f4ea;
-    color:#137333;
-    border:1px solid #34a853;
-    box-shadow:0 1px 3px rgba(19,115,51,.15);
-  }
-  .tag-verified.err{
-    background:#fce8e6;
-    color:#c5221f;
-    border:1px solid #ea4335;
-  }
-  .tag-verified.warn{
-    background:#fef7e0;
-    color:#b06000;
-    border:1px solid #f9ab00;
-  }
-  .tag-verified.pending{
-    background:#f1f3f4;
-    color:#5f6368;
-    border:1px solid #dadce0;
-  }
-  .batch-panel{
-    background:#fff;
-    border-radius:10px;
-    padding:14px 18px;
-    margin-bottom:16px;
-    box-shadow:0 2px 8px rgba(0,0,0,.08);
-    border-left:5px solid #188038;
-    animation:fadeIn .25s ease;
-  }
-  .batch-btn{
-    background:#0d652d;
-    color:#fff;
-    box-shadow:0 2px 6px rgba(13,101,45,.3);
-  }
-  .batch-btn:hover{background:#0b5324}
-  tr.batch-active td{
-    background:#e8f0fe !important;
-  }
+  .tag-verified{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;
+    padding:3px 9px;border-radius:20px;line-height:1.3;white-space:nowrap;letter-spacing:.2px;
+    transition:all .2s ease}
+  .tag-verified.ok{background:#e6f4ea;color:#137333;border:1px solid #34a853;
+    box-shadow:0 1px 3px rgba(19,115,51,.15)}
+  .tag-verified.err{background:#fce8e6;color:#c5221f;border:1px solid #ea4335}
+  .tag-verified.warn{background:#fef7e0;color:#b06000;border:1px solid #f9ab00}
+  .tag-verified.pending{background:#f1f3f4;color:#5f6368;border:1px solid #dadce0}
 
-  /* Virtual tiny tags */
-  .tiny-tag{
-    display:inline-flex;
-    align-items:center;
-    gap:3px;
-    font-size:10px;
-    font-weight:700;
-    padding:1.5px 6.5px;
-    border-radius:10px;
-    line-height:1.3;
-    letter-spacing:.2px;
-  }
+  .batch-panel{background:#fff;border-radius:10px;padding:14px 18px;margin-bottom:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);border-left:5px solid #188038;animation:fadeIn .25s ease}
+  .batch-btn{background:#0d652d;color:#fff;box-shadow:0 2px 6px rgba(13,101,45,.3)}
+  .batch-btn:hover{background:#0b5324}
+  tr.batch-active td{background:#e8f0fe !important}
+
+  .tiny-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;
+    padding:1.5px 6.5px;border-radius:10px;line-height:1.3;letter-spacing:.2px}
   .tiny-tag.age{background:#e8f0fe;color:#1a73e8;border:1px solid #d2e3fc}
   .tiny-tag.age.ok{background:#e6f4ea;color:#137333;border:1px solid #ceead6}
   .tiny-tag.age.warn{background:#fef7e0;color:#b06000;border:1px solid #fce8b2}
@@ -298,40 +205,28 @@
   .attach-row button{padding:6px 11px;font-size:11px}
 
   .foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;
-        border-top:1px solid #eee;padding-top:16px;flex-wrap:wrap}
+        border-top:1px solid #eee;padding-top:16px;flex-wrap:wrap;align-items:center}
 
-  /* ============ EXACT DRAGGABLE & ZOOMABLE IMAGE VIEWER ============ */
   #viewerOv{background:rgba(0,0,0,.25);padding:0;overflow:hidden}
-  #viewerOv .viewer-modal{
-    position:fixed;top:60px;left:50%;transform:translateX(-50%);
-    width:min(1100px,92vw);height:min(750px,82vh);
-    background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);
-    display:flex;flex-direction:column;overflow:hidden;transition:box-shadow .2s;
-  }
-  .v-head{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:11px 16px;background:#1a73e8;color:#fff;gap:10px;cursor:grab;user-select:none;
-  }
+  #viewerOv .viewer-modal{position:fixed;top:60px;left:50%;transform:translateX(-50%);
+    width:min(1100px,92vw);height:min(750px,82vh);background:#fff;border-radius:12px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;
+    overflow:hidden;transition:box-shadow .2s}
+  .v-head{display:flex;justify-content:space-between;align-items:center;
+    padding:11px 16px;background:#1a73e8;color:#fff;gap:10px;cursor:grab;user-select:none}
   .v-head.dragging{cursor:grabbing}
-  .v-head h3{
-    margin:0;color:#fff;font-size:14px;font-weight:600;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%;
-  }
+  .v-head h3{margin:0;color:#fff;font-size:14px;font-weight:600;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%}
   .v-tools{display:flex;align-items:center;gap:6px}
   .v-tools button{background:rgba(255,255,255,.15);color:#fff;padding:6px 10px;font-size:11.5px}
   .v-tools button:hover{background:rgba(255,255,255,.28)}
   .v-tools .zoom-label{font-size:11.5px;font-weight:600;min-width:44px;text-align:center}
-
   .v-body{flex:1;background:#202124;overflow:hidden;position:relative;cursor:grab}
   .v-body.panning{cursor:grabbing}
-  .v-body iframe{
-    position:absolute;top:0;left:0;width:100%;height:100%;
-    border:0;background:#fff;transform-origin:top left;transition:transform .15s ease;
-  }
-  .v-hint{
-    position:absolute;bottom:8px;right:12px;background:rgba(0,0,0,.6);
-    color:#fff;font-size:10.5px;padding:3px 9px;border-radius:20px;pointer-events:none;
-  }
+  .v-body iframe{position:absolute;top:0;left:0;width:100%;height:100%;
+    border:0;background:#fff;transform-origin:top left;transition:transform .15s ease}
+  .v-hint{position:absolute;bottom:8px;right:12px;background:rgba(0,0,0,.6);
+    color:#fff;font-size:10.5px;padding:3px 9px;border-radius:20px;pointer-events:none}
 
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);
          background:#323232;color:#fff;padding:12px 20px;border-radius:10px;
@@ -339,15 +234,11 @@
          transition:.4s cubic-bezier(.2,.8,.2,1);z-index:300;pointer-events:none;
          box-shadow:0 8px 26px rgba(0,0,0,.3);max-width:90%}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .toast.ok{background:#188038}
-  .toast.err{background:#d93025}
-  .toast.info{background:#1a73e8}
+  .toast.ok{background:#188038}.toast.err{background:#d93025}.toast.info{background:#1a73e8}
 
   @media (max-width:600px){
-    .wrap{padding:12px}
-    .modal{padding:16px;margin:8px auto}
-    .card .num{font-size:24px}
-    th,td{padding:8px 9px;font-size:12px}
+    .wrap{padding:12px}.modal{padding:16px;margin:8px auto}
+    .card .num{font-size:24px}th,td{padding:8px 9px;font-size:12px}
   }
 </style>
 </head>
@@ -357,8 +248,7 @@
   <div class="left">
     <span>Pension Data Manager</span>
     <span class="sync-status" id="syncStatus">
-      <span class="sync-dot"></span>
-      <span id="syncText">Checking...</span>
+      <span class="sync-dot"></span><span id="syncText">Checking...</span>
     </span>
   </div>
   <div class="stats">
@@ -392,7 +282,6 @@
     <button class="sync-btn" id="btnForceSync" onclick="manualSync(this)">🔄 Sync Now</button>
   </div>
 
-  <!-- CONTINUOUS / BATCH VERIFICATION PROGRESS PANEL -->
   <div class="batch-panel" id="batchPanel" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
       <div>
@@ -428,7 +317,7 @@
       <button class="m" style="padding:5px 10px;font-size:15px" onclick="closeModal()">✕</button>
     </h3>
 
-    <!-- AUTO-VERIFICATION NOTIFICATION STRIP -->
+    <!-- AUTO-VERIFICATION BANNER -->
     <div class="auto-verify-banner" id="avBanner">
       <div class="avb-left">
         <span class="avb-icon" id="avbIcon">✨</span>
@@ -445,7 +334,44 @@
       </div>
     </div>
 
-    <!-- VIRTUAL AGE BAR (CALCULATED FROM DOB & APPLICATION DATE) -->
+    <!-- 3-CHECK PANEL — SAVE-BEFORE-VERIFY -->
+    <div class="check-panel" id="checkPanel">
+      <div class="check-panel-title">
+        <span>📋 Required Checks — Tick &amp; Save All 3 Before Verify</span>
+        <span class="progress-pill" id="checkProgress">0 / 3 Saved</span>
+      </div>
+      <div class="check-grid">
+        <div class="check-card" id="chk-aadhaar" onclick="toggleCheck('aadhaar')">
+          <div class="check-box" id="chkbox-aadhaar">✓</div>
+          <div class="check-info">
+            <div class="check-name">1. AADHAR Verification</div>
+            <div class="check-status" id="chkstat-aadhaar">Not Checked</div>
+          </div>
+        </div>
+        <div class="check-card" id="chk-ifsc" onclick="toggleCheck('ifsc')">
+          <div class="check-box" id="chkbox-ifsc">✓</div>
+          <div class="check-info">
+            <div class="check-name">2. IFSC Verification</div>
+            <div class="check-status" id="chkstat-ifsc">Not Checked</div>
+          </div>
+        </div>
+        <div class="check-card" id="chk-account" onclick="toggleCheck('account')">
+          <div class="check-box" id="chkbox-account">✓</div>
+          <div class="check-info">
+            <div class="check-name">3. Account Verification</div>
+            <div class="check-status" id="chkstat-account">Not Checked</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="p" id="btnSaveChecks" onclick="withLoading(this, saveChecksManual)">
+          💾 Save Checks to Server
+        </button>
+        <span id="checkSaveMsg" style="font-size:12px;color:#5f6368"></span>
+      </div>
+    </div>
+
+    <!-- VIRTUAL AGE BAR -->
     <div class="virtual-age-bar" id="vAgeBar">
       <div class="vab-left">
         <span class="vab-icon">🎂</span>
@@ -459,22 +385,23 @@
 
     <div class="grid" id="grid"></div>
 
-    <!-- ATTACHMENTS (FULL INTACT VIEW OF DOCUMENTS) -->
     <div class="attach-section" id="attachSection" style="display:none">
       <h4>📎 Attachments</h4>
       <div class="attach-grid" id="attachGrid"></div>
     </div>
 
     <div class="foot">
+      <div class="verify-gate" id="verifyGate" style="margin-right:auto">
+        ⚠️ Save all 3 checks to enable Verify
+      </div>
       <button class="m" onclick="withLoading(this, closeModal)">Cancel</button>
       <button class="p" onclick="withLoading(this, save)">💾 Save Edits</button>
-      <button class="d" onclick="withLoading(this, del)">🗑️ Delete</button>
-      <button class="s" onclick="withLoading(this, verify)">✅ Verify &amp; Approve</button>
+      <button class="s" id="btnVerify" disabled onclick="withLoading(this, verify)">✅ Verify &amp; Approve</button>
     </div>
   </div>
 </div>
 
-<!-- DRAGGABLE & ZOOMABLE IMAGE VIEWER (EXACT ORIGINAL LOGIC INTACT) -->
+<!-- VIEWER -->
 <div class="overlay" id="viewerOv">
   <div class="viewer-modal" id="viewerModal">
     <div class="v-head" id="vHead">
@@ -498,99 +425,104 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ==== GOOGLE APPS SCRIPT WEB APP ENDPOINT ==== */
-const API = 'https://script.google.com/macros/s/AKfycbwB1GWxHNY7hF8JDfA0xHnHooaTUje4r4WBvV50ckGUaTbhm37QweObOgU_vX5NXS8Y/exec';
-
-/* Local Storage Cache Key */
+const API = 'https://script.google.com/macros/s/AKfycbzw5hs0RgLd7eapxv-RW_X7jKu__rMujXyWZVAlVDvVNmaD3KbFajYGvucnoA3MxgQY/exec';
 const CACHE_KEY = 'PENSION_APP_DATA_V2';
+const CHECKS_KEY = 'PENSION_ROW_CHECKS_V1';
 
 let H = [], CUR = null, ALL = [], VERIFIED_AADHAAR = new Set();
 let CURRENT_SYNC_TOKEN = '';
 let CURRENT_VIEW_URL = '';
 let CURRENT_ZOOM = 100;
 
-/* Auto-Verification state variables */
 let CURRENT_EXTRACTED_AADHAAR = null;
 let CURRENT_IS_BLURRY = false;
 let CURRENT_AADHAAR_FILE_OBJ = null;
 
-/* Continuous / Batch Auto-Verification Storage */
 const BATCH_VERIFY_KEY = 'PENSION_BATCH_VERIFY_MAP_V1';
 let ROW_VERIFY_MAP = loadRowVerifyMap();
 let IS_BATCH_RUNNING = false;
 let IS_BATCH_PAUSED = false;
 let BATCH_ABORT_FLAG = false;
 
+/* Local mirror of server "Already Checked" — {rowIndex: {aadhaar, ifsc, account}} of SAVED VALUES */
+let ROW_CHECKS = loadRowChecks();
+
+/* ---- CURRENT_MODE: per-field saved/dirty tracking (in memory only, not persisted) ---- */
+let FIELD_SAVE_STATE = { aadhaar:'idle', ifsc:'idle', account:'idle' };
+// 'idle' | 'saving' | 'saved' | 'error'
+
 function loadRowVerifyMap(){
-  try {
-    const raw = localStorage.getItem(BATCH_VERIFY_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch(e){ return {}; }
+  try { const raw = localStorage.getItem(BATCH_VERIFY_KEY); return raw ? JSON.parse(raw) : {}; }
+  catch(e){ return {}; }
+}
+function saveRowVerifyMap(){
+  try { localStorage.setItem(BATCH_VERIFY_KEY, JSON.stringify(ROW_VERIFY_MAP)); } catch(e){}
+}
+function loadRowChecks(){
+  try { const raw = localStorage.getItem(CHECKS_KEY); return raw ? JSON.parse(raw) : {}; }
+  catch(e){ return {}; }
+}
+function saveRowChecksLocal(){
+  try { localStorage.setItem(CHECKS_KEY, JSON.stringify(ROW_CHECKS)); } catch(e){}
 }
 
-function saveRowVerifyMap(){
-  try {
-    localStorage.setItem(BATCH_VERIFY_KEY, JSON.stringify(ROW_VERIFY_MAP));
-  } catch(e){}
+/* Get current row's saved checks (from server-synced mirror) */
+function getSavedChecks(rowIndex){
+  const c = ROW_CHECKS[rowIndex];
+  if (!c) return { aadhaar:'', ifsc:'', account:'' };
+  return {
+    aadhaar: String(c.aadhaar || '').trim(),
+    ifsc:    String(c.ifsc    || '').trim(),
+    account: String(c.account || '').trim()
+  };
+}
+/* Are all 3 SAVED (non-empty) values present? */
+function allChecksSaved(rowIndex){
+  const c = getSavedChecks(rowIndex);
+  return !!(c.aadhaar && c.ifsc && c.account);
 }
 
 function renderRowVerifyTag(rowIndex, aadhaar){
   const clean = cleanDigits(aadhaar);
   const info = ROW_VERIFY_MAP[rowIndex] || (clean ? ROW_VERIFY_MAP[clean] : null);
-  if (!info) {
-    return `<span class="tag-verified pending" id="vtag-${rowIndex}">⏳ Unchecked</span>`;
-  }
-  if (info.status === 'MATCH') {
-    return `<span class="tag-verified ok" id="vtag-${rowIndex}" title="12-digit UID matches AADHAR PHOTO">✅ Verified</span>`;
-  }
-  if (info.status === 'MISMATCH') {
-    return `<span class="tag-verified err" id="vtag-${rowIndex}" title="Mismatch: Extracted ${info.extracted || 'None'}">❌ Mismatch</span>`;
-  }
-  if (info.status === 'BLURRY') {
-    return `<span class="tag-verified warn" id="vtag-${rowIndex}" title="Photo is blurry - check manually">⚠️ Blurry</span>`;
-  }
+  if (!info) return `<span class="tag-verified pending" id="vtag-${rowIndex}">⏳ Unchecked</span>`;
+  if (info.status === 'MATCH') return `<span class="tag-verified ok" id="vtag-${rowIndex}" title="12-digit UID matches AADHAR PHOTO">✅ Verified</span>`;
+  if (info.status === 'MISMATCH') return `<span class="tag-verified err" id="vtag-${rowIndex}" title="Mismatch: Extracted ${info.extracted || 'None'}">❌ Mismatch</span>`;
+  if (info.status === 'BLURRY') return `<span class="tag-verified warn" id="vtag-${rowIndex}" title="Photo is blurry - check manually">⚠️ Blurry</span>`;
   return `<span class="tag-verified pending" id="vtag-${rowIndex}">⏳ Unchecked</span>`;
 }
 
-/* attachment columns (0-indexed) */
 const ATTACH_IDX = [28, 29, 30, 31, 32];
 const HIDDEN_FIELD_IDX = new Set([28, 29, 30, 31, 32]);
-
-let COL_DOB = -1;
-let COL_APP_DATE = -1;
+let COL_DOB = -1, COL_APP_DATE = -1;
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
 function toast(msg, type='info'){
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + type;
-  clearTimeout(t._t);
-  t._t = setTimeout(()=>t.classList.remove('show'), 2800);
+  t.textContent = msg; t.className = 'toast show ' + type;
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2800);
 }
-
 function setSyncStatus(state, text){
-  const el = document.getElementById('syncStatus');
-  const txt = document.getElementById('syncText');
+  const el = document.getElementById('syncStatus'), txt = document.getElementById('syncText');
   if (el) el.className = 'sync-status ' + state;
   if (txt) txt.textContent = text;
 }
-
 async function withLoading(btn, fn){
   if (!btn || btn.disabled) return;
   const original = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '<span class="spin"></span> Please wait...';
   try { await fn(); }
-  finally { btn.disabled = false; btn.innerHTML = original; }
+  finally {
+    btn.innerHTML = original;
+    if (btn.id !== 'btnVerify') btn.disabled = false;
+    else refreshVerifyGate();
+  }
 }
-
 async function api(action, extra = {}) {
   const res = await fetch(API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action, ...extra }),
-    redirect: 'follow'
+    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, ...extra }), redirect: 'follow'
   });
   const text = await res.text();
   let json;
@@ -600,43 +532,30 @@ async function api(action, extra = {}) {
   return json.data;
 }
 
-/* =========================================================
-   LOCAL STORAGE CACHE MANAGEMENT
-   ========================================================= */
+/* ============= CACHE ============= */
 function loadFromLocalStorage(){
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
+    const raw = localStorage.getItem(CACHE_KEY); if (!raw) return null;
     const cache = JSON.parse(raw);
     if (cache && Array.isArray(cache.headers) && Array.isArray(cache.rows)) {
       cache.rows = cache.rows.filter(r => r && r.rowIndex != null && Array.isArray(r.data));
       return cache;
     }
-  } catch(e) {
-    console.warn('Cache read error:', e);
-  }
+  } catch(e) {}
   return null;
 }
-
 function saveToLocalStorage(){
   try {
     const cleanRows = ALL.filter(r => r && r.rowIndex != null && Array.isArray(r.data));
-    const payload = {
-      headers: H,
-      rows: cleanRows,
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      headers: H, rows: cleanRows,
       verifiedAadhaar: Array.from(VERIFIED_AADHAAR),
-      syncToken: CURRENT_SYNC_TOKEN,
-      savedAt: new Date().getTime()
-    };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
-  } catch(e) {
-    console.warn('Cache write error:', e);
-  }
+      syncToken: CURRENT_SYNC_TOKEN, savedAt: new Date().getTime()
+    }));
+  } catch(e) {}
 }
 
-/* =========================================================
-   FAST INITIALIZATION & SYNC LOGIC
-   ========================================================= */
+/* ============= INIT & SYNC ============= */
 async function init(){
   const cached = loadFromLocalStorage();
   if (cached && cached.rows && cached.rows.length > 0){
@@ -644,15 +563,12 @@ async function init(){
     ALL = cached.rows;
     VERIFIED_AADHAAR = new Set(cached.verifiedAadhaar || []);
     CURRENT_SYNC_TOKEN = cached.syncToken || '';
-    detectSpecialColumns();
-    buildFilters();
-    applyFilters();
+    detectSpecialColumns(); buildFilters(); applyFilters();
     setSyncStatus('ok', '⚡ Instant Cache');
   } else {
     document.getElementById('tbl').textContent = 'Connecting to server...';
     setSyncStatus('syncing', 'Connecting...');
   }
-
   await syncData(false);
 }
 
@@ -672,11 +588,23 @@ async function syncData(isManual = false){
       ALL = (res.rows || []).filter(r => r && r.rowIndex != null && Array.isArray(r.data));
       VERIFIED_AADHAAR = new Set(res.verifiedAadhaar || []);
       CURRENT_SYNC_TOKEN = res.syncToken || '';
-      detectSpecialColumns();
-      buildFilters();
-      applyFilters();
-      saveToLocalStorage();
 
+      /* checkMap now contains ACTUAL VALUES from server — REPLACE local mirror */
+      if (res.checkMap && typeof res.checkMap === 'object'){
+        ROW_CHECKS = {};
+        Object.keys(res.checkMap).forEach(k => {
+          const idx = Number(k); if (!idx) return;
+          ROW_CHECKS[idx] = {
+            aadhaar: String(res.checkMap[k].aadhaar || '').trim(),
+            ifsc:    String(res.checkMap[k].ifsc    || '').trim(),
+            account: String(res.checkMap[k].account || '').trim()
+          };
+        });
+        saveRowChecksLocal();
+      }
+
+      detectSpecialColumns(); buildFilters(); applyFilters();
+      saveToLocalStorage();
       setSyncStatus('ok', `✅ Synced (${ALL.length} rows)`);
       if (isManual) toast(`Synced ${ALL.length} records successfully`, 'ok');
     }
@@ -694,46 +622,56 @@ async function syncData(isManual = false){
   }
 }
 
-function manualSync(btn){
-  withLoading(btn, async () => {
-    await syncData(true);
-  });
-}
+function manualSync(btn){ withLoading(btn, async () => { await syncData(true); }); }
 
 function detectSpecialColumns(){
-  COL_DOB = -1;
-  COL_APP_DATE = -1;
+  COL_DOB = -1; COL_APP_DATE = -1;
   let dateCol = -1, timeCol = -1;
-
   H.forEach((h, i) => {
     const s = String(h || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (s.includes('dob') || s.includes('birth') || s.includes('dateofbirth') || s.includes('janmatithi')) {
-      COL_DOB = i;
-    } else if (s.includes('applicationdate') || s.includes('applydate') || s.includes('dateofapplication') || s.includes('entrydate')) {
-      COL_APP_DATE = i;
-    } else if (s === 'date') {
-      dateCol = i;
-    } else if (s.includes('timestamp') || s.includes('time')) {
-      timeCol = i;
-    }
+    if (s.includes('dob') || s.includes('birth') || s.includes('dateofbirth') || s.includes('janmatithi')) COL_DOB = i;
+    else if (s.includes('applicationdate') || s.includes('applydate') || s.includes('dateofapplication') || s.includes('entrydate')) COL_APP_DATE = i;
+    else if (s === 'date') dateCol = i;
+    else if (s.includes('timestamp') || s.includes('time')) timeCol = i;
   });
-
-  if (COL_APP_DATE === -1) {
-    COL_APP_DATE = dateCol !== -1 ? dateCol : timeCol;
-  }
+  if (COL_APP_DATE === -1) COL_APP_DATE = dateCol !== -1 ? dateCol : timeCol;
 }
 
-/* Check non-editable fields: TimeStamp, Date, User (Note: Aadhaar index 0 is EDITABLE as requested) */
+/* Find current value in the modal grid for a given field kind */
+function findColForKind(kind){
+  const hdrs = H.map(h => String(h || '').trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
+  if (kind === 'aadhaar') return 0;
+  if (kind === 'ifsc'){
+    for (let i = 0; i < hdrs.length; i++) if (hdrs[i].includes('ifsc')) return i;
+    return 26;
+  }
+  if (kind === 'account'){
+    for (let i = 0; i < hdrs.length; i++){
+      const s = hdrs[i];
+      if (s.includes('accountno') || s === 'account' || s.includes('acno') ||
+          s.includes('accno') || s.includes('bankacc') || s.includes('bankaccount')) return i;
+    }
+    return 24;
+  }
+  return -1;
+}
+
+function currentFieldValue(kind){
+  const idx = findColForKind(kind);
+  if (idx === -1) return '';
+  const inp = document.querySelector(`#grid input[data-i="${idx}"]`);
+  if (inp) return String(inp.value || '').trim();
+  return CUR ? String(CUR.data[idx] || '').trim() : '';
+}
+
 function isNonEditableField(header, index){
-  if (index === 0) return false; // User manually types / edits Aadhaar Number!
+  if (index === 0) return false;
   const s = String(header || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
   if (s.includes('timestamp') || s === 'time' || s === 'entrytime') return true;
   if ((s === 'date' || s === 'appdate' || s === 'applicationdate' || s === 'submissiondate' || s === 'entrydate') && !s.includes('birth') && !s.includes('dob')) return true;
   if (s === 'user' || s.includes('username') || s.includes('userid') || s.includes('createdby') || s.includes('operator')) return true;
   return false;
 }
-
-/* Check fields that show small green length count: Aadhaar Number, Account No, Mobile No */
 function hasGreenCountBadge(header, index){
   const s = String(header || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
   if (s.includes('aadhaar') || s.includes('aadhar') || index === 0) return true;
@@ -741,258 +679,148 @@ function hasGreenCountBadge(header, index){
   if (s.includes('mobile') || s.includes('phone') || s.includes('contact') || index === 25) return true;
   return false;
 }
-
 function isDobColumn(header, index){
   if (index === COL_DOB) return true;
   const s = String(header || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
   return s.includes('dob') || s.includes('birth') || s.includes('dateofbirth');
 }
-
 function isAppDateColumn(header, index){
   if (index === COL_APP_DATE) return true;
   const s = String(header || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
   return (s.includes('applicationdate') || s.includes('applydate') || s === 'date') && !s.includes('birth') && !s.includes('dob');
 }
-
-/* Robust Date Parser for DD/MM/YYYY, YYYY-MM-DD, etc. */
 function parseAnyDate(val){
   if (!val) return null;
   if (val instanceof Date && !isNaN(val.getTime())) return val;
-  const s = String(val).trim();
-  if (!s) return null;
-
+  const s = String(val).trim(); if (!s) return null;
   let m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
-  if (m){
-    const d = new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
-    if (!isNaN(d.getTime())) return d;
-  }
-
+  if (m){ const d = new Date(+m[3], +m[2]-1, +m[1]); if (!isNaN(d.getTime())) return d; }
   m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
-  if (m){
-    const d = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
-    if (!isNaN(d.getTime())) return d;
-  }
-
-  const std = new Date(s);
-  if (!isNaN(std.getTime())) return std;
+  if (m){ const d = new Date(+m[1], +m[2]-1, +m[3]); if (!isNaN(d.getTime())) return d; }
+  const std = new Date(s); if (!isNaN(std.getTime())) return std;
   return null;
 }
-
-/* Calculate exact age as of reference date */
 function computeExactAge(dobVal, appDateVal){
-  const dob = parseAnyDate(dobVal);
-  const ref = parseAnyDate(appDateVal) || new Date();
-
+  const dob = parseAnyDate(dobVal), ref = parseAnyDate(appDateVal) || new Date();
   if (!dob) return { ok: false, text: 'Provide Date of Birth' };
   if (ref < dob) return { ok: false, text: 'DOB is after Application Date (Invalid)' };
-
-  let years = ref.getFullYear() - dob.getFullYear();
-  let months = ref.getMonth() - dob.getMonth();
-  let days = ref.getDate() - dob.getDate();
-
-  if (days < 0){
-    months -= 1;
-    const prevMonthDays = new Date(ref.getFullYear(), ref.getMonth(), 0).getDate();
-    days += prevMonthDays;
-  }
-  if (months < 0){
-    years -= 1;
-    months += 12;
-  }
-
-  const shortTag = `${years} Y ${months} M`;
-  const fullText = `${years} Years, ${months} Months, ${days} Days`;
-  const isSenior = years >= 60;
-  const refStr = `${String(ref.getDate()).padStart(2, '0')}/${String(ref.getMonth() + 1).padStart(2, '0')}/${ref.getFullYear()}`;
-
-  return { ok: true, years, months, days, shortTag, fullText, isSenior, refStr };
+  let y = ref.getFullYear() - dob.getFullYear(), m = ref.getMonth() - dob.getMonth(), d = ref.getDate() - dob.getDate();
+  if (d < 0){ m -= 1; const p = new Date(ref.getFullYear(), ref.getMonth(), 0).getDate(); d += p; }
+  if (m < 0){ y -= 1; m += 12; }
+  const shortTag = `${y} Y ${m} M`, fullText = `${y} Years, ${m} Months, ${d} Days`;
+  const isSenior = y >= 60;
+  const refStr = `${String(ref.getDate()).padStart(2,'0')}/${String(ref.getMonth()+1).padStart(2,'0')}/${ref.getFullYear()}`;
+  return { ok: true, years:y, months:m, days:d, shortTag, fullText, isSenior, refStr };
 }
-
-/* Live recalculate age in the modal */
 function recalculateModalAge(){
   const dobInput = COL_DOB !== -1 ? document.querySelector(`#grid input[data-i="${COL_DOB}"]`) : null;
   const appDateInput = COL_APP_DATE !== -1 ? document.querySelector(`#grid input[data-i="${COL_APP_DATE}"]`) : null;
-
-  const dobVal = dobInput ? dobInput.value : '';
-  const appDateVal = appDateInput ? appDateInput.value : '';
-
-  const age = computeExactAge(dobVal, appDateVal);
-  const vVal = document.getElementById('vabValue');
-  const vRight = document.getElementById('vabRight');
-  const dobTag = document.getElementById('tag-dob-age');
-  const appTag = document.getElementById('tag-app-ref');
-
+  const age = computeExactAge(dobInput ? dobInput.value : '', appDateInput ? appDateInput.value : '');
+  const vVal = document.getElementById('vabValue'), vRight = document.getElementById('vabRight');
+  const dobTag = document.getElementById('tag-dob-age'), appTag = document.getElementById('tag-app-ref');
   if (age.ok){
     if (vVal) vVal.textContent = age.fullText;
-    if (vRight) {
-      vRight.innerHTML = `
-        <span class="tiny-tag age ${age.isSenior ? 'ok' : 'warn'}">
-          ${age.isSenior ? '✅ Eligible Senior (≥ 60 Y)' : '⚠️ Age < 60 Years'}
-        </span>
-        <span class="tiny-tag ref">📅 Ref: ${age.refStr}</span>
-      `;
-    }
-    if (dobTag){
-      dobTag.textContent = `🎂 Age: ${age.shortTag}`;
-      dobTag.className = `tiny-tag age ${age.isSenior ? 'ok' : 'warn'}`;
-    }
-    if (appTag){
-      appTag.textContent = `Ref: ${age.refStr}`;
-    }
+    if (vRight) vRight.innerHTML = `
+      <span class="tiny-tag age ${age.isSenior?'ok':'warn'}">${age.isSenior?'✅ Eligible Senior (≥ 60 Y)':'⚠️ Age < 60 Years'}</span>
+      <span class="tiny-tag ref">📅 Ref: ${age.refStr}</span>`;
+    if (dobTag){ dobTag.textContent = `🎂 Age: ${age.shortTag}`; dobTag.className = `tiny-tag age ${age.isSenior?'ok':'warn'}`; }
+    if (appTag){ appTag.textContent = `Ref: ${age.refStr}`; }
   } else {
     if (vVal) vVal.textContent = age.text;
     if (vRight) vRight.innerHTML = `<span class="tiny-tag ref">DOB / App Date required</span>`;
-    if (dobTag){
-      dobTag.textContent = '🎂 Age: —';
-      dobTag.className = 'tiny-tag age';
-    }
+    if (dobTag){ dobTag.textContent = '🎂 Age: —'; dobTag.className = 'tiny-tag age'; }
   }
 }
 
-/* =========================================================
-   AUTO-VERIFICATION METHOD
-   ========================================================= */
+/* ============= AUTO-VERIFY (photo match) ============= */
 function cleanDigits(s){ return String(s || '').replace(/\D/g, ''); }
-
 function formatAadhaar(s){
   const d = cleanDigits(s);
   return d ? d.replace(/(\d{4})(?=\d)/g, '$1 ').trim() : '';
 }
-
 function updateAadhaarMatchStatus(){
   const aadhaarInp = document.querySelector('#grid input[data-i="0"]');
   const typedVal = aadhaarInp ? aadhaarInp.value : (CUR ? String(CUR.data[0] || '') : '');
   const typedClean = cleanDigits(typedVal);
   const extClean = cleanDigits(CURRENT_EXTRACTED_AADHAAR);
-
-  const banner = document.getElementById('avBanner');
-  const icon = document.getElementById('avbIcon');
-  const title = document.getElementById('avbTitle');
-  const sub = document.getElementById('avbSub');
-  const extTag = document.getElementById('avbExtracted');
-  const fieldTag = document.getElementById('tag-aadhaar-verify');
-
-  if (extTag) {
-    extTag.textContent = CURRENT_EXTRACTED_AADHAAR
-      ? 'Photo UID: ' + formatAadhaar(CURRENT_EXTRACTED_AADHAAR)
-      : 'Photo UID: —';
-  }
-
-  // 1. BLURRY / UNREADABLE
-  if (CURRENT_IS_BLURRY) {
+  const banner = document.getElementById('avBanner'), icon = document.getElementById('avbIcon');
+  const title = document.getElementById('avbTitle'), sub = document.getElementById('avbSub');
+  const extTag = document.getElementById('avbExtracted'), fieldTag = document.getElementById('tag-aadhaar-verify');
+  if (extTag) extTag.textContent = CURRENT_EXTRACTED_AADHAAR ? 'Photo UID: ' + formatAadhaar(CURRENT_EXTRACTED_AADHAAR) : 'Photo UID: —';
+  if (CURRENT_IS_BLURRY){
     if (banner) banner.className = 'auto-verify-banner blurry';
     if (icon) icon.textContent = '⚠️';
     if (title) title.innerHTML = '<span style="color:#b06000">⚠️ Blurry Image – Check Manually</span>';
-    if (sub) sub.textContent = 'Aadhaar photo is blurry or unclear. Auto-extraction cannot guarantee 100% accuracy. Please check manually.';
-    if (fieldTag) {
-      fieldTag.className = 'verify-tag warn';
-      fieldTag.innerHTML = '⚠️ Blurry (Check Manually)';
-      fieldTag.style.display = 'inline-flex';
-    }
+    if (sub) sub.textContent = 'Aadhaar photo is blurry or unclear. Please check manually.';
+    if (fieldTag){ fieldTag.className = 'verify-tag warn'; fieldTag.innerHTML = '⚠️ Blurry'; fieldTag.style.display = 'inline-flex'; }
     return;
   }
-
-  // 2. EXTRACTED & TYPED BOTH AVAILABLE
-  if (extClean && extClean.length === 12) {
-    if (typedClean.length === 12) {
-      if (extClean === typedClean) {
-        // MATCH: GREEN TICK MARK (VERIFIED)
+  if (extClean && extClean.length === 12){
+    if (typedClean.length === 12){
+      if (extClean === typedClean){
         if (banner) banner.className = 'auto-verify-banner match';
         if (icon) icon.textContent = '✅';
         if (title) title.innerHTML = '<span style="color:#137333">✅ Verified (12-Digit Match)</span>';
-        if (sub) sub.innerHTML = `Extracted 12-digit UID (<b>${formatAadhaar(extClean)}</b>) matches manually typed field perfectly!`;
-        if (fieldTag) {
-          fieldTag.className = 'verify-tag ok';
-          fieldTag.innerHTML = '✔ Verified (Match)';
-          fieldTag.style.display = 'inline-flex';
-        }
+        if (sub) sub.innerHTML = `Extracted (<b>${formatAadhaar(extClean)}</b>) matches typed field perfectly!`;
+        if (fieldTag){ fieldTag.className = 'verify-tag ok'; fieldTag.innerHTML = '✔ Verified'; fieldTag.style.display = 'inline-flex'; }
       } else {
-        // MISMATCH: CROSS MARK
         if (banner) banner.className = 'auto-verify-banner mismatch';
         if (icon) icon.textContent = '❌';
-        if (title) title.innerHTML = '<span style="color:#c5221f">❌ Cross Mark (Not Matched)</span>';
-        if (sub) sub.innerHTML = `Extracted from photo: <b>${formatAadhaar(extClean)}</b> ≠ Typed: <b>${formatAadhaar(typedClean)}</b>`;
-        if (fieldTag) {
-          fieldTag.className = 'verify-tag err';
-          fieldTag.innerHTML = '✖ Not Matched';
-          fieldTag.style.display = 'inline-flex';
-        }
+        if (title) title.innerHTML = '<span style="color:#c5221f">❌ Not Matched</span>';
+        if (sub) sub.innerHTML = `Photo: <b>${formatAadhaar(extClean)}</b> ≠ Typed: <b>${formatAadhaar(typedClean)}</b>`;
+        if (fieldTag){ fieldTag.className = 'verify-tag err'; fieldTag.innerHTML = '✖ Not Matched'; fieldTag.style.display = 'inline-flex'; }
       }
     } else {
-      // Typing in progress
       if (banner) banner.className = 'auto-verify-banner';
       if (icon) icon.textContent = '🔢';
       if (title) title.textContent = `Aadhaar Must Have 12 Digits (Currently: ${typedClean.length})`;
-      if (sub) sub.textContent = `Extracted from photo: ${formatAadhaar(extClean)}. Type remaining digits to verify.`;
-      if (fieldTag) {
-        fieldTag.className = 'verify-tag warn';
-        fieldTag.innerHTML = `${typedClean.length}/12 Digits`;
-        fieldTag.style.display = 'inline-flex';
-      }
+      if (sub) sub.textContent = `Photo UID: ${formatAadhaar(extClean)}`;
+      if (fieldTag){ fieldTag.className = 'verify-tag warn'; fieldTag.innerHTML = `${typedClean.length}/12`; fieldTag.style.display = 'inline-flex'; }
     }
   } else {
-    // Waiting for photo extraction or no photo
     if (banner) banner.className = 'auto-verify-banner';
     if (icon) icon.textContent = '✨';
     if (title) title.textContent = 'Aadhaar Photo Auto-Verification';
-    if (sub) sub.textContent = 'Click "Auto-Verify Photo" or waiting for AADHAR PHOTO document scan...';
+    if (sub) sub.textContent = 'Click "Auto-Verify Photo" or waiting for AADHAR PHOTO scan...';
     if (fieldTag) fieldTag.style.display = 'none';
   }
 }
-
-/* Call backend API to auto-extract 12-digit Aadhaar number from photo */
 async function runAadhaarAutoVerify(photoObj){
-  const banner = document.getElementById('avBanner');
-  const title = document.getElementById('avbTitle');
-  const sub = document.getElementById('avbSub');
-  const icon = document.getElementById('avbIcon');
-
+  const banner = document.getElementById('avBanner'), title = document.getElementById('avbTitle');
+  const sub = document.getElementById('avbSub'), icon = document.getElementById('avbIcon');
   if (banner) banner.className = 'auto-verify-banner loading';
   if (icon) icon.textContent = '⏳';
   if (title) title.textContent = 'Analyzing Aadhaar Card Photo...';
   if (sub) sub.textContent = 'Extracting 12-digit number and testing photo sharpness...';
-
   const aadhaarInp = document.querySelector('#grid input[data-i="0"]');
   const typedAadhaar = cleanDigits(aadhaarInp ? aadhaarInp.value : (CUR ? CUR.data[0] : ''));
-
   try {
-    let payload = {
+    const payload = {
       typedAadhaar,
       fileId: photoObj ? photoObj.id : '',
       imageUrl: photoObj ? (photoObj.id ? `/api/proxy-image?id=${photoObj.id}` : photoObj.preview) : ''
     };
-
     const res = await fetch('/api/verify-aadhaar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     const data = await res.json();
-
     let extracted = data.extractedNumber ? cleanDigits(data.extractedNumber) : null;
     let isBlurry = Boolean(data.isBlurry || data.quality === 'blurry' || data.quality === 'unreadable');
-
-    // Fallback: Check if file name contains 12 digits
-    if (!extracted && photoObj && photoObj.name && !isBlurry) {
+    if (!extracted && photoObj && photoObj.name && !isBlurry){
       const match = photoObj.name.match(/(\d{12})/);
       if (match) extracted = match[1];
     }
-
     CURRENT_EXTRACTED_AADHAAR = extracted;
     CURRENT_IS_BLURRY = isBlurry;
     updateAadhaarMatchStatus();
 
-    if (CURRENT_IS_BLURRY) {
-      toast('⚠️ Aadhaar photo is blurry - check manually', 'info');
-    } else if (extracted && extracted === typedAadhaar) {
-      toast('✅ Verified: 12-digit Aadhaar matches photo!', 'ok');
-    } else if (extracted && typedAadhaar.length === 12) {
-      toast('❌ Not Matched: Number does not match photo', 'err');
-    }
+    if (CURRENT_IS_BLURRY) toast('⚠️ Aadhaar photo is blurry - check manually', 'info');
+    else if (extracted && extracted === typedAadhaar) toast('✅ Aadhaar matches photo!', 'ok');
+    else if (extracted && typedAadhaar.length === 12) toast('❌ Not Matched', 'err');
 
-    if (CUR && CUR.rowIndex != null) {
-      let finalSt = CURRENT_IS_BLURRY ? 'BLURRY' : (extracted && extracted === typedAadhaar ? 'MATCH' : 'MISMATCH');
+    if (CUR && CUR.rowIndex != null){
+      const finalSt = CURRENT_IS_BLURRY ? 'BLURRY' : (extracted && extracted === typedAadhaar ? 'MATCH' : 'MISMATCH');
       ROW_VERIFY_MAP[CUR.rowIndex] = { status: finalSt, extracted, isBlurry: CURRENT_IS_BLURRY };
       if (typedAadhaar) ROW_VERIFY_MAP[typedAadhaar] = { status: finalSt, extracted, isBlurry: CURRENT_IS_BLURRY };
       saveRowVerifyMap();
@@ -1000,17 +828,15 @@ async function runAadhaarAutoVerify(photoObj){
       if (cell) cell.innerHTML = renderRowVerifyTag(CUR.rowIndex, typedAadhaar);
     }
   } catch(e) {
-    console.warn('Auto-verify fetch error, applying fallback:', e);
-
-    if (photoObj && photoObj.name) {
+    console.warn('Auto-verify error:', e);
+    if (photoObj && photoObj.name){
       const match = photoObj.name.match(/(\d{12})/);
-      if (match) {
+      if (match){
         CURRENT_EXTRACTED_AADHAAR = match[1];
         CURRENT_IS_BLURRY = false;
         updateAadhaarMatchStatus();
-
-        if (CUR && CUR.rowIndex != null) {
-          let finalSt = CURRENT_EXTRACTED_AADHAAR === typedAadhaar ? 'MATCH' : 'MISMATCH';
+        if (CUR && CUR.rowIndex != null){
+          const finalSt = CURRENT_EXTRACTED_AADHAAR === typedAadhaar ? 'MATCH' : 'MISMATCH';
           ROW_VERIFY_MAP[CUR.rowIndex] = { status: finalSt, extracted: CURRENT_EXTRACTED_AADHAAR, isBlurry: false };
           if (typedAadhaar) ROW_VERIFY_MAP[typedAadhaar] = { status: finalSt, extracted: CURRENT_EXTRACTED_AADHAAR, isBlurry: false };
           saveRowVerifyMap();
@@ -1020,44 +846,184 @@ async function runAadhaarAutoVerify(photoObj){
         return;
       }
     }
-
     CURRENT_IS_BLURRY = true;
     updateAadhaarMatchStatus();
-    if (CUR && CUR.rowIndex != null) {
-      ROW_VERIFY_MAP[CUR.rowIndex] = { status: 'BLURRY', extracted: null, isBlurry: true };
-      saveRowVerifyMap();
-      const cell = document.getElementById('vcell-' + CUR.rowIndex);
-      if (cell) cell.innerHTML = renderRowVerifyTag(CUR.rowIndex, typedAadhaar);
-    }
-    toast('⚠️ Check Aadhaar photo manually (' + e.message + ')', 'info');
+    toast('⚠️ Check Aadhaar photo manually', 'info');
   }
 }
-
 function triggerAutoVerification(btn){
-  withLoading(btn, async () => {
-    await runAadhaarAutoVerify(CURRENT_AADHAAR_FILE_OBJ);
-  });
+  withLoading(btn, async () => { await runAadhaarAutoVerify(CURRENT_AADHAAR_FILE_OBJ); });
 }
-
 function handleFieldInput(idx, val){
   const cntEl = document.getElementById('cnt-' + idx);
   if (cntEl) cntEl.textContent = String(val || '').length;
+  if (idx === 0) updateAadhaarMatchStatus();
+  if (idx === COL_DOB || idx === COL_APP_DATE) recalculateModalAge();
 
-  if (idx === 0) {
-    updateAadhaarMatchStatus();
-  }
-
-  if (idx === COL_DOB || idx === COL_APP_DATE){
-    recalculateModalAge();
+  /* If a value of Aadhaar/IFSC/Account changes after being saved → mark that check DIRTY */
+  if (CUR && CUR.rowIndex != null){
+    const kAad = findColForKind('aadhaar'), kIfsc = findColForKind('ifsc'), kAcc = findColForKind('account');
+    const saved = getSavedChecks(CUR.rowIndex);
+    if (idx === kAad && saved.aadhaar && cleanDigits(saved.aadhaar) !== cleanDigits(val)){
+      FIELD_SAVE_STATE.aadhaar = 'idle';
+      const c = { ...ROW_CHECKS[CUR.rowIndex] };
+      c.aadhaar = '';
+      ROW_CHECKS[CUR.rowIndex] = c; saveRowChecksLocal();
+    }
+    if (idx === kIfsc && saved.ifsc && String(saved.ifsc).toUpperCase() !== String(val || '').toUpperCase()){
+      FIELD_SAVE_STATE.ifsc = 'idle';
+      const c = { ...ROW_CHECKS[CUR.rowIndex] };
+      c.ifsc = '';
+      ROW_CHECKS[CUR.rowIndex] = c; saveRowChecksLocal();
+    }
+    if (idx === kAcc && saved.account && cleanDigits(saved.account) !== cleanDigits(val)){
+      FIELD_SAVE_STATE.account = 'idle';
+      const c = { ...ROW_CHECKS[CUR.rowIndex] };
+      c.account = '';
+      ROW_CHECKS[CUR.rowIndex] = c; saveRowChecksLocal();
+    }
+    refreshCheckUI();
   }
 }
 
+/* ============= 3-CHECK: SAVE-TO-SERVER FLOW ============= */
+function toggleCheck(kind){
+  if (!CUR) return;
+  /* Toggling: if already saved → UNSAVE (clear). If empty → SAVE current value. */
+  const saved = getSavedChecks(CUR.rowIndex);
+  if (saved[kind]){
+    // Un-tick → clear server value
+    const c = { ...saved };
+    c[kind] = '';
+    ROW_CHECKS[CUR.rowIndex] = c;
+    saveRowChecksLocal();
+    FIELD_SAVE_STATE[kind] = 'idle';
+    refreshCheckUI();
+    persistCheckNow(kind, false);
+  } else {
+    const val = currentFieldValue(kind);
+    if (!val){
+      toast('⚠️ No ' + kind + ' value to check', 'err');
+      return;
+    }
+    FIELD_SAVE_STATE[kind] = 'saving';
+    refreshCheckUI();
+    persistCheckNow(kind, true);
+  }
+}
+
+async function persistCheckNow(kind, ticked){
+  if (!CUR) return;
+  const rowIndex = CUR.rowIndex;
+  const c = { ...getSavedChecks(rowIndex) };
+  if (ticked){
+    c[kind] = currentFieldValue(kind);
+  } else {
+    c[kind] = '';
+  }
+  ROW_CHECKS[rowIndex] = c;
+  saveRowChecksLocal();
+  refreshCheckUI();
+
+  try {
+    await api('saveCheck', { row: rowIndex, checks: c });
+    FIELD_SAVE_STATE[kind] = ticked ? 'saved' : 'idle';
+    toast(`✅ ${kind.toUpperCase()} check saved`, 'ok');
+  } catch(e) {
+    FIELD_SAVE_STATE[kind] = 'error';
+    toast(`❌ Save failed for ${kind}: ${e.message}`, 'err');
+  }
+  refreshCheckUI();
+
+  /* If all 3 saved → trigger auto-sync to pull updated checkMap in background */
+  if (allChecksSaved(rowIndex)){
+    syncData(false).catch(()=>{});
+  }
+}
+
+async function saveChecksManual(){
+  if (!CUR) return;
+  const rowIndex = CUR.rowIndex;
+  const saved = getSavedChecks(rowIndex);
+
+  /* Only save the "ticked" ones. If nothing ticked, nothing to save */
+  const toSave = {
+    aadhaar: saved.aadhaar || '',
+    ifsc:    saved.ifsc    || '',
+    account: saved.account || ''
+  };
+  if (!toSave.aadhaar && !toSave.ifsc && !toSave.account){
+    toast('Nothing to save — tick at least one check', 'info');
+    return;
+  }
+  const msg = document.getElementById('checkSaveMsg');
+  if (msg) msg.textContent = 'Saving…';
+  try {
+    await api('saveCheck', { row: rowIndex, checks: toSave });
+    if (msg) msg.textContent = '✅ Saved to server';
+    toast('✅ Checks saved', 'ok');
+    await syncData(false);
+  } catch(e) {
+    if (msg) msg.textContent = '❌ ' + e.message;
+    toast('Save failed: ' + e.message, 'err');
+  }
+}
+
+function refreshCheckUI(){
+  if (!CUR) return;
+  const saved = getSavedChecks(CUR.rowIndex);
+  ['aadhaar','ifsc','account'].forEach(kind => {
+    const card = document.getElementById('chk-' + kind);
+    const stat = document.getElementById('chkstat-' + kind);
+    if (!card || !stat) return;
+
+    const val = saved[kind];
+    const state = FIELD_SAVE_STATE[kind] || 'idle';
+
+    card.classList.remove('checked','pending','saving','error');
+
+    if (state === 'saving') { card.classList.add('saving'); stat.textContent = 'Saving…'; }
+    else if (state === 'error') { card.classList.add('error'); stat.textContent = 'Save failed — retry'; }
+    else if (val) { card.classList.add('checked'); stat.textContent = `✓ Saved: ${val}`; }
+    else { card.classList.add('pending'); stat.textContent = 'Not Checked'; }
+  });
+
+  const savedCount = (saved.aadhaar?1:0) + (saved.ifsc?1:0) + (saved.account?1:0);
+  const prog = document.getElementById('checkProgress');
+  if (prog) prog.textContent = `${savedCount} / 3 Saved`;
+
+  refreshVerifyGate();
+}
+
+function refreshVerifyGate(){
+  if (!CUR) return;
+  const saved = getSavedChecks(CUR.rowIndex);
+  const missing = [];
+  if (!saved.aadhaar) missing.push('Aadhaar');
+  if (!saved.ifsc) missing.push('IFSC');
+  if (!saved.account) missing.push('Account');
+  const allDone = missing.length === 0;
+
+  const btn = document.getElementById('btnVerify');
+  const gate = document.getElementById('verifyGate');
+  if (btn) btn.disabled = !allDone;
+  if (gate){
+    if (allDone){
+      gate.className = 'verify-gate ready';
+      gate.innerHTML = '✅ All 3 checks SAVED — Verify enabled';
+    } else {
+      gate.className = 'verify-gate';
+      gate.innerHTML = '⚠️ Save these checks first: ' + missing.join(', ');
+    }
+  }
+}
+
+/* ============= TABLE ============= */
 function isVerified(row){
   if (!row || !Array.isArray(row.data)) return false;
   const aad = String(row.data[0] || '').trim();
   return aad && VERIFIED_AADHAAR.has(aad);
 }
-
 function buildFilters(){
   const ifscs = new Set(), gps = new Set();
   ALL.forEach(r => {
@@ -1065,17 +1031,13 @@ function buildFilters(){
     if (r.data[26]) ifscs.add(String(r.data[26]).trim());
     if (r.data[21]) gps.add(String(r.data[21]).trim());
   });
-  const iSel = document.getElementById('fIFSC');
-  const gSel = document.getElementById('fGP');
+  const iSel = document.getElementById('fIFSC'), gSel = document.getElementById('fGP');
   if (!iSel || !gSel) return;
   const curI = iSel.value, curG = gSel.value;
-  iSel.innerHTML = '<option value="">All IFSC</option>' +
-    [...ifscs].sort().map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
-  gSel.innerHTML = '<option value="">All GP / Ward</option>' +
-    [...gps].sort().map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  iSel.innerHTML = '<option value="">All IFSC</option>' + [...ifscs].sort().map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  gSel.innerHTML = '<option value="">All GP / Ward</option>' + [...gps].sort().map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
   iSel.value = curI; gSel.value = curG;
 }
-
 function searchBtn(btn){ withLoading(btn, async () => applyFilters()); }
 function resetBtn(btn){
   withLoading(btn, async () => {
@@ -1086,84 +1048,65 @@ function resetBtn(btn){
     applyFilters();
   });
 }
-
 function applyFilters(){
-  const qEl = document.getElementById('q');
-  const q    = qEl ? qEl.value.toLowerCase().trim() : '';
-  const ifscEl = document.getElementById('fIFSC');
-  const ifsc = ifscEl ? ifscEl.value : '';
-  const gpEl = document.getElementById('fGP');
-  const gp   = gpEl ? gpEl.value : '';
-  const vStatEl = document.getElementById('fVerifyStatus');
-  const vStat = vStatEl ? vStatEl.value : '';
+  const q = (document.getElementById('q')?.value || '').toLowerCase().trim();
+  const ifsc = document.getElementById('fIFSC')?.value || '';
+  const gp = document.getElementById('fGP')?.value || '';
+  const vStat = document.getElementById('fVerifyStatus')?.value || '';
 
   const pendingOnly = ALL.filter(r => r && Array.isArray(r.data) && !isVerified(r));
   const filtered = pendingOnly.filter(r => {
     if (!r || !Array.isArray(r.data)) return false;
     if (ifsc && String(r.data[26]||'').trim() !== ifsc) return false;
     if (gp   && String(r.data[21]||'').trim() !== gp)   return false;
-
-    if (vStat) {
+    if (vStat){
       const aad = cleanDigits(r.data[0]);
       const info = ROW_VERIFY_MAP[r.rowIndex] || (aad ? ROW_VERIFY_MAP[aad] : null);
       const st = info ? info.status : 'PENDING';
       if (st !== vStat) return false;
     }
-
-    if (q    && !r.data.some(v => String(v || '').toLowerCase().includes(q))) return false;
+    if (q && !r.data.some(v => String(v || '').toLowerCase().includes(q))) return false;
     return true;
   });
 
   updateCounters(pendingOnly.length);
   render(filtered);
 }
-
 function updateCounters(pending){
-  const total    = ALL.length;
+  const total = ALL.length;
   const verified = Math.max(0, total - pending);
-  const cT = document.getElementById('cTotal');
-  const cP = document.getElementById('cPending');
-  const cV = document.getElementById('cVerified');
-  const hT = document.getElementById('hTotal');
-  const hP = document.getElementById('hPending');
-
-  if (cT) cT.textContent = total;
-  if (cP) cP.textContent = pending;
-  if (cV) cV.textContent = verified;
-  if (hT) hT.textContent = total;
-  if (hP) hP.textContent = pending;
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set('cTotal', total); set('cPending', pending); set('cVerified', verified);
+  set('hTotal', total); set('hPending', pending);
 }
-
+function renderChecksMiniTag(rowIndex){
+  const saved = getSavedChecks(rowIndex);
+  const done = (saved.aadhaar?1:0) + (saved.ifsc?1:0) + (saved.account?1:0);
+  if (done === 3) return `<span class="tag-verified ok" title="All 3 checks saved">✅ 3/3 Saved</span>`;
+  if (done === 0) return `<span class="tag-verified pending" title="No checks saved">⏳ 0/3 Saved</span>`;
+  return `<span class="tag-verified warn" title="Partial checks saved">⚠️ ${done}/3 Saved</span>`;
+}
 function render(rows){
   const tbl = document.getElementById('tbl');
   if (!tbl) return;
   if (!rows || !rows.length){
-    tbl.innerHTML =
-      '<div style="padding:45px;text-align:center;color:#666;font-size:14.5px">No pending records match your filters.</div>';
+    tbl.innerHTML = '<div style="padding:45px;text-align:center;color:#666;font-size:14.5px">No pending records match your filters.</div>';
     return;
   }
-  let h = '<table><thead><tr><th>Row</th><th>Aadhaar</th><th>Auto-Verify</th><th>Name</th><th>Mobile</th><th>Village</th><th>GP/Ward</th><th>IFSC</th><th>Action</th></tr></thead><tbody>';
+  let h = '<table><thead><tr><th>Row</th><th>Aadhaar</th><th>Auto-Verify</th><th>Checks</th><th>Name</th><th>Mobile</th><th>Village</th><th>GP/Ward</th><th>IFSC</th><th>Action</th></tr></thead><tbody>';
   rows.forEach(r => {
     if (!r || r.rowIndex == null || !Array.isArray(r.data)) return;
     const d = r.data;
     const name = [d[5], d[6], d[7]].filter(Boolean).join(' ') || '-';
     const aadhaar = String(d[0] || '').trim();
     const mobile = String(d[25] || '').trim();
-
     h += `<tr id="row-${r.rowIndex}">
       <td>${r.rowIndex}</td>
-      <td>
-        <b>${esc(aadhaar)}</b>
-        ${aadhaar ? `<span class="cnt-badge" style="margin-left:6px">${aadhaar.length}</span>` : ''}
-      </td>
-      <td id="vcell-${r.rowIndex}">
-        ${renderRowVerifyTag(r.rowIndex, aadhaar)}
-      </td>
+      <td><b>${esc(aadhaar)}</b>${aadhaar ? `<span class="cnt-badge" style="margin-left:6px">${aadhaar.length}</span>` : ''}</td>
+      <td id="vcell-${r.rowIndex}">${renderRowVerifyTag(r.rowIndex, aadhaar)}</td>
+      <td>${renderChecksMiniTag(r.rowIndex)}</td>
       <td>${esc(name)}</td>
-      <td>
-        ${esc(mobile)}
-        ${mobile ? `<span class="cnt-badge" style="margin-left:6px">${mobile.length}</span>` : ''}
-      </td>
+      <td>${esc(mobile)}${mobile ? `<span class="cnt-badge" style="margin-left:6px">${mobile.length}</span>` : ''}</td>
       <td>${esc(d[22])}</td>
       <td>${esc(d[21])}</td>
       <td>${esc(d[26])}</td>
@@ -1173,273 +1116,149 @@ function render(rows){
   tbl.innerHTML = h + '</tbody></table>';
 }
 
-/* =========================================================
-   CONTINUOUS BATCH VERIFICATION LOGIC (PROCESS EACH ROW)
-   ========================================================= */
-function toggleBatchVerification(btn){
-  if (IS_BATCH_RUNNING) {
-    stopBatchVerification();
-  } else {
-    startContinuousVerification();
-  }
-}
-
+/* ============= BATCH AUTO-VERIFY ============= */
+function toggleBatchVerification(btn){ if (IS_BATCH_RUNNING) stopBatchVerification(); else startContinuousVerification(); }
 function togglePauseBatch(){
   IS_BATCH_PAUSED = !IS_BATCH_PAUSED;
-  const btn = document.getElementById('btnPauseBatch');
-  const spin = document.getElementById('bSpinner');
+  const btn = document.getElementById('btnPauseBatch'), spin = document.getElementById('bSpinner');
   if (btn) btn.textContent = IS_BATCH_PAUSED ? '▶ Resume' : '⏸ Pause';
   if (spin) spin.style.display = IS_BATCH_PAUSED ? 'none' : 'inline-block';
   const title = document.getElementById('bTitle');
-  if (title) {
-    title.textContent = IS_BATCH_PAUSED
-      ? '⏸ Continuous Auto-Verification Paused'
-      : '⚡ Continuous Auto-Verification in Progress...';
-  }
+  if (title) title.textContent = IS_BATCH_PAUSED ? '⏸ Paused' : '⚡ Continuous Auto-Verification in Progress...';
 }
-
 function stopBatchVerification(){
-  BATCH_ABORT_FLAG = true;
-  IS_BATCH_RUNNING = false;
-  IS_BATCH_PAUSED = false;
+  BATCH_ABORT_FLAG = true; IS_BATCH_RUNNING = false; IS_BATCH_PAUSED = false;
   const btn = document.getElementById('btnBatchVerify');
-  if (btn) {
-    btn.textContent = '⚡ Auto-Verify All Rows';
-    btn.className = 'batch-btn';
-  }
-  const spin = document.getElementById('bSpinner');
-  if (spin) spin.style.display = 'none';
-  const title = document.getElementById('bTitle');
-  if (title) title.textContent = '⏹ Continuous Auto-Verification Stopped';
-  saveRowVerifyMap();
-  toast('Continuous verification stopped', 'info');
+  if (btn){ btn.textContent = '⚡ Auto-Verify All Rows'; btn.className = 'batch-btn'; }
+  const spin = document.getElementById('bSpinner'); if (spin) spin.style.display = 'none';
+  const title = document.getElementById('bTitle'); if (title) title.textContent = '⏹ Stopped';
+  saveRowVerifyMap(); toast('Continuous verification stopped', 'info');
 }
-
 async function startContinuousVerification(){
   const pendingOnly = ALL.filter(r => r && Array.isArray(r.data) && !isVerified(r));
-  if (!pendingOnly.length) {
-    toast('No pending records to verify', 'info');
-    return;
-  }
-
-  IS_BATCH_RUNNING = true;
-  IS_BATCH_PAUSED = false;
-  BATCH_ABORT_FLAG = false;
-
-  const panel = document.getElementById('batchPanel');
-  if (panel) panel.style.display = 'block';
-
+  if (!pendingOnly.length){ toast('No pending records to verify', 'info'); return; }
+  IS_BATCH_RUNNING = true; IS_BATCH_PAUSED = false; BATCH_ABORT_FLAG = false;
+  const panel = document.getElementById('batchPanel'); if (panel) panel.style.display = 'block';
   const btn = document.getElementById('btnBatchVerify');
-  if (btn) {
-    btn.textContent = '⏹ Stop Verification';
-    btn.className = 'd';
-  }
-
-  const spin = document.getElementById('bSpinner');
-  if (spin) spin.style.display = 'inline-block';
-
-  const bBar = document.getElementById('bProgressBar');
-  const bTitle = document.getElementById('bTitle');
-  const bDetail = document.getElementById('bDetail');
-  const countOk = document.getElementById('bCountOk');
-  const countErr = document.getElementById('bCountErr');
-  const countWarn = document.getElementById('bCountWarn');
-
-  let matchCount = 0;
-  let mismatchCount = 0;
-  let blurryCount = 0;
-
+  if (btn){ btn.textContent = '⏹ Stop Verification'; btn.className = 'd'; }
+  const spin = document.getElementById('bSpinner'); if (spin) spin.style.display = 'inline-block';
+  const bBar = document.getElementById('bProgressBar'), bTitle = document.getElementById('bTitle'),
+        bDetail = document.getElementById('bDetail'),
+        countOk = document.getElementById('bCountOk'), countErr = document.getElementById('bCountErr'),
+        countWarn = document.getElementById('bCountWarn');
+  let matchCount = 0, mismatchCount = 0, blurryCount = 0;
   Object.values(ROW_VERIFY_MAP).forEach(v => {
-    if (v.status === 'MATCH') matchCount++;
-    else if (v.status === 'MISMATCH') mismatchCount++;
-    else if (v.status === 'BLURRY') blurryCount++;
+    if (v.status === 'MATCH') matchCount++; else if (v.status === 'MISMATCH') mismatchCount++; else if (v.status === 'BLURRY') blurryCount++;
   });
-
-  const total = pendingOnly.length;
-  let processed = 0;
-
+  const total = pendingOnly.length; let processed = 0;
   toast(`Starting continuous verification of ${total} rows...`, 'info');
-
   const CHUNK_SIZE = 5;
-  for (let c = 0; c < total; c += CHUNK_SIZE) {
+  for (let c = 0; c < total; c += CHUNK_SIZE){
     if (BATCH_ABORT_FLAG) break;
-
     const chunk = pendingOnly.slice(c, c + CHUNK_SIZE);
     const paths = chunk.map(r => String(r.data[28] || '').trim());
-
     let filesMap = {};
     try {
       const files = await api('files', { files: paths });
-      if (Array.isArray(files)) {
-        files.forEach((f, idx) => {
-          filesMap[chunk[idx].rowIndex] = f;
-        });
-      }
-    } catch(err) {
-      console.warn('Batch files fetch error:', err);
-    }
-
-    for (const r of chunk) {
+      if (Array.isArray(files)) files.forEach((f, idx) => { filesMap[chunk[idx].rowIndex] = f; });
+    } catch(err) { console.warn('Batch files fetch error:', err); }
+    for (const r of chunk){
       if (BATCH_ABORT_FLAG) break;
-
-      while (IS_BATCH_PAUSED) {
-        if (BATCH_ABORT_FLAG) break;
-        await new Promise(res => setTimeout(res, 300));
-      }
+      while (IS_BATCH_PAUSED){ if (BATCH_ABORT_FLAG) break; await new Promise(res => setTimeout(res, 300)); }
       if (BATCH_ABORT_FLAG) break;
-
       processed++;
-      const rowIdx = r.rowIndex;
-      const cleanTyped = cleanDigits(r.data[0]);
-
+      const rowIdx = r.rowIndex; const cleanTyped = cleanDigits(r.data[0]);
       const rowEl = document.getElementById('row-' + rowIdx);
-      if (rowEl) {
-        rowEl.classList.add('batch-active');
-        rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-
+      if (rowEl){ rowEl.classList.add('batch-active'); rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
       if (bTitle) bTitle.textContent = `⚡ Continuous Auto-Verification (${processed} of ${total})...`;
       if (bDetail) bDetail.textContent = `Processing Row #${rowIdx} (Aadhaar: ${formatAadhaar(cleanTyped) || 'None'})...`;
       if (bBar) bBar.style.width = Math.round((processed / total) * 100) + '%';
-
       const fileObj = filesMap[rowIdx];
-      let status = 'BLURRY';
-      let extracted = null;
-      let isBlurry = false;
-
-      if (!fileObj || !fileObj.found) {
-        status = 'BLURRY';
-        isBlurry = true;
-        blurryCount++;
-      } else {
+      let status = 'BLURRY', extracted = null, isBlurry = false;
+      if (!fileObj || !fileObj.found){ status = 'BLURRY'; isBlurry = true; blurryCount++; }
+      else {
         try {
           const verifyRes = await fetch('/api/verify-aadhaar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              typedAadhaar: cleanTyped,
-              fileId: fileObj.id,
-              imageUrl: fileObj.id ? `/api/proxy-image?id=${fileObj.id}` : fileObj.preview
-            })
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ typedAadhaar: cleanTyped, fileId: fileObj.id, imageUrl: fileObj.id ? `/api/proxy-image?id=${fileObj.id}` : fileObj.preview })
           });
           const resData = await verifyRes.json();
           extracted = resData.extractedNumber ? cleanDigits(resData.extractedNumber) : null;
           isBlurry = Boolean(resData.isBlurry || resData.quality === 'blurry' || resData.quality === 'unreadable');
-
-          if (!extracted && fileObj.name && !isBlurry) {
-            const m = fileObj.name.match(/(\d{12})/);
-            if (m) extracted = m[1];
-          }
-
-          if (isBlurry || !extracted || extracted.length < 12) {
-            status = 'BLURRY';
-            blurryCount++;
-          } else if (cleanTyped.length === 12 && extracted === cleanTyped) {
-            status = 'MATCH';
-            matchCount++;
-          } else {
-            status = 'MISMATCH';
-            mismatchCount++;
-          }
+          if (!extracted && fileObj.name && !isBlurry){ const m = fileObj.name.match(/(\d{12})/); if (m) extracted = m[1]; }
+          if (isBlurry || !extracted || extracted.length < 12){ status = 'BLURRY'; blurryCount++; }
+          else if (cleanTyped.length === 12 && extracted === cleanTyped){ status = 'MATCH'; matchCount++; }
+          else { status = 'MISMATCH'; mismatchCount++; }
         } catch(e) {
-          if (fileObj.name) {
+          if (fileObj.name){
             const m = fileObj.name.match(/(\d{12})/);
-            if (m) {
+            if (m){
               extracted = m[1];
-              if (cleanTyped.length === 12 && extracted === cleanTyped) {
-                status = 'MATCH';
-                matchCount++;
-              } else {
-                status = 'MISMATCH';
-                mismatchCount++;
-              }
-            } else {
-              status = 'BLURRY';
-              blurryCount++;
-            }
-          } else {
-            status = 'BLURRY';
-            blurryCount++;
-          }
+              if (cleanTyped.length === 12 && extracted === cleanTyped){ status = 'MATCH'; matchCount++; }
+              else { status = 'MISMATCH'; mismatchCount++; }
+            } else { status = 'BLURRY'; blurryCount++; }
+          } else { status = 'BLURRY'; blurryCount++; }
         }
       }
-
       ROW_VERIFY_MAP[rowIdx] = { status, extracted, isBlurry };
       if (cleanTyped) ROW_VERIFY_MAP[cleanTyped] = { status, extracted, isBlurry };
-
       const cell = document.getElementById('vcell-' + rowIdx);
       if (cell) cell.innerHTML = renderRowVerifyTag(rowIdx, cleanTyped);
-
       if (rowEl) rowEl.classList.remove('batch-active');
-
       if (countOk) countOk.textContent = '✅ Verified: ' + matchCount;
       if (countErr) countErr.textContent = '❌ Mismatch: ' + mismatchCount;
       if (countWarn) countWarn.textContent = '⚠️ Blurry: ' + blurryCount;
-
       await new Promise(res => setTimeout(res, 120));
     }
   }
-
   saveRowVerifyMap();
   IS_BATCH_RUNNING = false;
-  if (btn) {
-    btn.textContent = '⚡ Auto-Verify All Rows';
-    btn.className = 'batch-btn';
-  }
+  if (btn){ btn.textContent = '⚡ Auto-Verify All Rows'; btn.className = 'batch-btn'; }
   if (spin) spin.style.display = 'none';
-
-  if (!BATCH_ABORT_FLAG) {
+  if (!BATCH_ABORT_FLAG){
     if (bTitle) bTitle.textContent = '✅ Continuous Auto-Verification Complete!';
-    if (bDetail) bDetail.textContent = `Completed all ${processed} rows: ${matchCount} verified with green tag!`;
+    if (bDetail) bDetail.textContent = `Completed all ${processed} rows: ${matchCount} verified!`;
     if (bBar) bBar.style.width = '100%';
-    toast(`✅ Complete! ${matchCount} rows matched and verified with green tag.`, 'ok');
+    toast(`✅ Complete! ${matchCount} rows matched.`, 'ok');
   }
 }
 
-/* -------- modal -------- */
-function openRowBtn(btn, i){
-  withLoading(btn, () => openRow(i));
-}
-
+/* ============= MODAL ============= */
+function openRowBtn(btn, i){ withLoading(btn, () => openRow(i)); }
 async function openRow(i){
   if (i == null) return;
   try {
     let rowObj = ALL.find(x => x && x.rowIndex === i);
     let rowData = (rowObj && Array.isArray(rowObj.data)) ? rowObj.data.slice() : null;
-
     if (!rowData || !H.length){
       const res = await api('get', { row: i });
       if (res && res.headers) H = res.headers;
       if (res && Array.isArray(res.data)) rowData = res.data;
     }
-
     if (!rowData) throw new Error('Row #' + i + ' data could not be retrieved.');
-
     CUR = { rowIndex: i, data: rowData.slice() };
     detectSpecialColumns();
+    FIELD_SAVE_STATE = { aadhaar:'idle', ifsc:'idle', account:'idle' };
 
     const cleanTyped = cleanDigits(CUR.data[0]);
     const cachedVerify = ROW_VERIFY_MAP[i] || (cleanTyped ? ROW_VERIFY_MAP[cleanTyped] : null);
-    if (cachedVerify) {
+    if (cachedVerify){
       CURRENT_EXTRACTED_AADHAAR = cachedVerify.extracted || null;
       CURRENT_IS_BLURRY = Boolean(cachedVerify.isBlurry);
       setTimeout(() => updateAadhaarMatchStatus(), 30);
     } else {
-      CURRENT_EXTRACTED_AADHAAR = null;
-      CURRENT_IS_BLURRY = false;
+      CURRENT_EXTRACTED_AADHAAR = null; CURRENT_IS_BLURRY = false;
     }
     CURRENT_AADHAAR_FILE_OBJ = null;
 
     document.getElementById('grid').innerHTML = H.map((h, k) => {
       if (HIDDEN_FIELD_IDX.has(k)) return '';
-
       const val = CUR.data[k] != null ? String(CUR.data[k]) : '';
       const isReadOnly = isNonEditableField(h, k);
       const showCount = hasGreenCountBadge(h, k);
       const isDob = isDobColumn(h, k);
       const isApp = isAppDateColumn(h, k);
       const isAadhaar = k === 0;
-
       return `
         <label>
           <div class="lbl-row">
@@ -1452,112 +1271,66 @@ async function openRow(i){
               ${isReadOnly ? `<span class="tiny-tag ro" title="Non-editable field">🔒 Locked</span>` : ''}
             </div>
           </div>
-          <input
-            data-i="${k}"
-            value="${esc(val)}"
+          <input data-i="${k}" value="${esc(val)}"
             ${isReadOnly ? 'readonly class="readonly-input"' : ''}
             oninput="handleFieldInput(${k}, this.value)"
-            ${isAadhaar ? 'placeholder="12-digit Aadhaar Number"' : ''}
-          />
-        </label>
-      `;
+            ${isAadhaar ? 'placeholder="12-digit Aadhaar Number"' : ''}/>
+        </label>`;
     }).join('');
 
     document.getElementById('mtitle').textContent = 'Verify Row #' + i;
-
     recalculateModalAge();
+    refreshCheckUI();
     buildAttachments(CUR.data);
-
     document.getElementById('ov').classList.add('on');
   } catch(e){ toast(e.message, 'err'); }
 }
 
-/* -------- attachments & view logic -------- */
+/* ============= ATTACHMENTS ============= */
 async function buildAttachments(data){
-  const sec = document.getElementById('attachSection');
-  const grid = document.getElementById('attachGrid');
+  const sec = document.getElementById('attachSection'), grid = document.getElementById('attachGrid');
   if (!sec || !grid) return;
-
   const paths = ATTACH_IDX.map(i => String(data[i] || '').trim());
   const hasAny = paths.some(p => p);
-  if (!hasAny){
-    sec.style.display = 'none';
-    return;
-  }
+  if (!hasAny){ sec.style.display = 'none'; return; }
   sec.style.display = 'block';
   grid.innerHTML = '<div style="grid-column:1/-1;color:#5f6368;font-size:12px">Loading attachments…</div>';
-
   try {
     const files = await api('files', { files: paths });
-
-    if (files && files[0] && files[0].found) {
+    if (files && files[0] && files[0].found){
       CURRENT_AADHAAR_FILE_OBJ = files[0];
-      if (!CURRENT_EXTRACTED_AADHAAR && !CURRENT_IS_BLURRY) {
-        runAadhaarAutoVerify(files[0]);
-      } else {
-        updateAadhaarMatchStatus();
-      }
-    } else {
-      updateAadhaarMatchStatus();
-    }
-
+      if (!CURRENT_EXTRACTED_AADHAAR && !CURRENT_IS_BLURRY) runAadhaarAutoVerify(files[0]);
+      else updateAadhaarMatchStatus();
+    } else updateAadhaarMatchStatus();
     grid.innerHTML = files.map((f, i) => {
       const label = H[ATTACH_IDX[i]] || 'Attachment';
-
       if (!f.found){
-        return `<div class="attach-row">
-          <div class="doc">
-            <div class="docname">${esc(label)}</div>
-            <div class="docmeta">File not found in PENSION_DATA_Images</div>
-          </div>
-          <span class="pill miss">Missing</span>
-        </div>`;
+        return `<div class="attach-row"><div class="doc"><div class="docname">${esc(label)}</div>
+          <div class="docmeta">File not found</div></div><span class="pill miss">Missing</span></div>`;
       }
-      return `<div class="attach-row found">
-        <div class="doc">
-          <div class="docname">${esc(label)}</div>
-          <div class="docmeta">${esc(f.name)}</div>
-        </div>
-        <span class="pill ok">Ready</span>
-        <button class="p" onclick="openViewer('${esc(f.preview)}', '${esc(f.view)}', '${esc(label)}')">👁 View</button>
-      </div>`;
+      return `<div class="attach-row found"><div class="doc"><div class="docname">${esc(label)}</div>
+        <div class="docmeta">${esc(f.name)}</div></div><span class="pill ok">Ready</span>
+        <button class="p" onclick="openViewer('${esc(f.preview)}', '${esc(f.view)}', '${esc(label)}')">👁 View</button></div>`;
     }).join('');
   } catch(e){
-    grid.innerHTML = `<div style="grid-column:1/-1;color:#d93025;font-size:12px">Error loading files: ${esc(e.message)}</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;color:#d93025;font-size:12px">Error: ${esc(e.message)}</div>`;
   }
 }
 
-/* -------- EXACT DRAGGABLE & ZOOMABLE IMAGE VIEWER -------- */
-let dragState = null;
-let panState  = null;
-
+/* ============= VIEWER ============= */
+let dragState = null, panState = null;
 function openViewer(previewUrl, viewUrl, title){
-  CURRENT_VIEW_URL = viewUrl;
-  CURRENT_ZOOM = 100;
-
+  CURRENT_VIEW_URL = viewUrl; CURRENT_ZOOM = 100;
   const modal = document.getElementById('viewerModal');
-  modal.style.top  = '60px';
-  modal.style.left = '50%';
-  modal.style.transform = 'translateX(-50%)';
-
+  modal.style.top = '60px'; modal.style.left = '50%'; modal.style.transform = 'translateX(-50%)';
   document.getElementById('vTitle').textContent = title || 'Document';
   const frame = document.getElementById('vFrame');
-  frame.src = previewUrl;
-  frame.style.transform = 'translate(0px, 0px) scale(1)';
+  frame.src = previewUrl; frame.style.transform = 'translate(0px, 0px) scale(1)';
   document.getElementById('zoomLbl').textContent = '100%';
-
   document.getElementById('viewerOv').classList.add('on');
 }
-
-function closeViewer(){
-  document.getElementById('viewerOv').classList.remove('on');
-  document.getElementById('vFrame').src = 'about:blank';
-}
-
-function zoom(delta){
-  CURRENT_ZOOM = Math.min(400, Math.max(50, CURRENT_ZOOM + delta));
-  applyZoom();
-}
+function closeViewer(){ document.getElementById('viewerOv').classList.remove('on'); document.getElementById('vFrame').src = 'about:blank'; }
+function zoom(delta){ CURRENT_ZOOM = Math.min(400, Math.max(50, CURRENT_ZOOM + delta)); applyZoom(); }
 function zoomReset(){
   CURRENT_ZOOM = 100;
   const frame = document.getElementById('vFrame');
@@ -1566,125 +1339,92 @@ function zoomReset(){
 }
 function applyZoom(){
   const frame = document.getElementById('vFrame');
-  const z = CURRENT_ZOOM / 100;
-  const cur = getTranslate_(frame);
+  const z = CURRENT_ZOOM / 100, cur = getTranslate_(frame);
   frame.style.transform = `translate(${cur.x}px, ${cur.y}px) scale(${z})`;
   document.getElementById('zoomLbl').textContent = CURRENT_ZOOM + '%';
 }
-
 function getTranslate_(el){
   const t = el.style.transform || '';
   const m = t.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
   return m ? { x: parseFloat(m[1]) || 0, y: parseFloat(m[2]) || 0 } : { x: 0, y: 0 };
 }
-
-function openInTab(){
-  if (CURRENT_VIEW_URL) window.open(CURRENT_VIEW_URL, '_blank', 'noopener');
-}
-
+function openInTab(){ if (CURRENT_VIEW_URL) window.open(CURRENT_VIEW_URL, '_blank', 'noopener'); }
 const vHead = document.getElementById('vHead');
 vHead.addEventListener('mousedown', e => {
   if (e.target.closest('button')) return;
   const modal = document.getElementById('viewerModal');
   const rect = modal.getBoundingClientRect();
-  dragState = {
-    startX: e.clientX,
-    startY: e.clientY,
-    left: rect.left,
-    top: rect.top
-  };
-  modal.style.left = rect.left + 'px';
-  modal.style.top  = rect.top + 'px';
+  dragState = { startX: e.clientX, startY: e.clientY, left: rect.left, top: rect.top };
+  modal.style.left = rect.left + 'px'; modal.style.top = rect.top + 'px';
   modal.style.transform = 'none';
-  modal.classList.add('dragging');
-  vHead.classList.add('dragging');
+  modal.classList.add('dragging'); vHead.classList.add('dragging');
   e.preventDefault();
 });
-
 const vBody = document.getElementById('vBody');
 vBody.addEventListener('mousedown', e => {
-  const frame = document.getElementById('vFrame');
-  const t = getTranslate_(frame);
-  panState = {
-    startX: e.clientX,
-    startY: e.clientY,
-    baseX: t.x,
-    baseY: t.y
-  };
+  const frame = document.getElementById('vFrame'), t = getTranslate_(frame);
+  panState = { startX: e.clientX, startY: e.clientY, baseX: t.x, baseY: t.y };
   vBody.classList.add('panning');
 });
-
 document.addEventListener('mousemove', e => {
   if (dragState){
-    const dx = e.clientX - dragState.startX;
-    const dy = e.clientY - dragState.startY;
+    const dx = e.clientX - dragState.startX, dy = e.clientY - dragState.startY;
     const modal = document.getElementById('viewerModal');
     modal.style.left = (dragState.left + dx) + 'px';
     modal.style.top  = (dragState.top  + dy) + 'px';
   }
   if (panState){
-    const dx = e.clientX - panState.startX;
-    const dy = e.clientY - panState.startY;
+    const dx = e.clientX - panState.startX, dy = e.clientY - panState.startY;
     const frame = document.getElementById('vFrame');
     const z = CURRENT_ZOOM / 100;
-    frame.style.transform =
-      `translate(${panState.baseX + dx}px, ${panState.baseY + dy}px) scale(${z})`;
+    frame.style.transform = `translate(${panState.baseX + dx}px, ${panState.baseY + dy}px) scale(${z})`;
   }
 });
-
 document.addEventListener('mouseup', () => {
   if (dragState){
     dragState = null;
     document.getElementById('viewerModal').classList.remove('dragging');
     vHead.classList.remove('dragging');
   }
-  panState = null;
-  vBody.classList.remove('panning');
+  panState = null; vBody.classList.remove('panning');
 });
 
-/* -------- modal actions -------- */
-function collect(){
-  const a = new Array(H.length).fill('');
-  document.querySelectorAll('#grid input').forEach(inp => a[+inp.dataset.i] = inp.value);
-  return a;
-}
+/* ============= MODAL ACTIONS ============= */
 function closeModal(){
   document.getElementById('ov').classList.remove('on');
   CUR = null;
   CURRENT_EXTRACTED_AADHAAR = null;
   CURRENT_IS_BLURRY = false;
   CURRENT_AADHAAR_FILE_OBJ = null;
+  FIELD_SAVE_STATE = { aadhaar:'idle', ifsc:'idle', account:'idle' };
 }
 
-/* OPTIMISTIC SAVE */
 async function save(){
-  if (!CUR || CUR.rowIndex == null) {
-    toast('No row is currently selected', 'err');
-    return;
-  }
-
+  if (!CUR || CUR.rowIndex == null){ toast('No row selected', 'err'); return; }
   const targetRow = CUR.rowIndex;
   const data = CUR.data.slice();
   document.querySelectorAll('#grid input').forEach(inp => data[+inp.dataset.i] = inp.value);
-
   CUR.data = data;
   const local = ALL.find(x => x && x.rowIndex === targetRow);
   if (local) local.data = data;
-
-  saveToLocalStorage();
-  applyFilters();
-  buildFilters();
-
+  saveToLocalStorage(); applyFilters(); buildFilters();
   try {
     const msg = await api('update', { row: targetRow, data });
     toast('✅ ' + msg, 'ok');
   } catch(e){ toast(e.message, 'err'); }
 }
 
-/* OPTIMISTIC VERIFY */
 async function verify(){
-  if (!CUR || CUR.rowIndex == null) {
-    toast('No row is currently selected', 'err');
+  if (!CUR || CUR.rowIndex == null){ toast('No row selected', 'err'); return; }
+
+  /* ENFORCE: all 3 checks must be SAVED */
+  const saved = getSavedChecks(CUR.rowIndex);
+  const missing = [];
+  if (!saved.aadhaar) missing.push('Aadhaar');
+  if (!saved.ifsc)    missing.push('IFSC');
+  if (!saved.account) missing.push('Account');
+  if (missing.length){
+    toast('⚠️ Save these checks first: ' + missing.join(', '), 'err');
     return;
   }
 
@@ -1696,50 +1436,14 @@ async function verify(){
 
   const aad = String(data[0] || '').trim();
   const rowEl = document.getElementById('row-' + targetRow);
-
-  if (rowEl){
-    rowEl.classList.add('verified-hide');
-    await new Promise(res => setTimeout(res, 450));
-  }
+  if (rowEl){ rowEl.classList.add('verified-hide'); await new Promise(res => setTimeout(res, 450)); }
 
   if (aad) VERIFIED_AADHAAR.add(aad);
-  saveToLocalStorage();
-  closeModal();
-  applyFilters();
+  saveToLocalStorage(); closeModal(); applyFilters();
 
   try {
     const msg = await api('verify', { row: targetRow, data });
     toast('✅ ' + msg, 'ok');
-  } catch(e){
-    toast('Server error: ' + e.message, 'err');
-  }
-}
-
-/* OPTIMISTIC DELETE */
-async function del(){
-  if (!CUR || CUR.rowIndex == null) {
-    toast('No row is currently selected', 'err');
-    return;
-  }
-
-  const targetRow = CUR.rowIndex;
-  if (!confirm('Delete row #' + targetRow + ' permanently?')) return;
-
-  const rowEl = document.getElementById('row-' + targetRow);
-  if (rowEl){
-    rowEl.classList.add('verified-hide');
-    await new Promise(res => setTimeout(res, 450));
-  }
-
-  ALL = ALL.filter(x => x && x.rowIndex !== targetRow);
-  saveToLocalStorage();
-  closeModal();
-  applyFilters();
-  buildFilters();
-
-  try {
-    const msg = await api('delete', { row: targetRow });
-    toast('🗑️ ' + msg, 'info');
   } catch(e){
     toast('Server error: ' + e.message, 'err');
   }
