@@ -227,7 +227,7 @@
   </div>
 
   <div class="filters">
-    <input id="q" type="text" placeholder="Search Aadhaar / Name / Mobile..."
+    <input id="q" type="text" placeholder="Search Aadhaar / Name / Mobile / Account..."
            onkeydown="if(event.key==='Enter')applyFilters()"/>
     <select id="fIFSC" onchange="applyFilters()"><option value="">All IFSC</option></select>
     <select id="fGP"   onchange="applyFilters()"><option value="">All GP / Ward</option></select>
@@ -347,7 +347,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbz599Z7lPyvphUHoHMNURg0Cm0NdRGiB-3VD05s3oe_qttK6JzWFkD-_vH5Mp4GDAc2/exec';
+const API = 'https://script.google.com/macros/s/AKfycbwgPBbVQkJ3bW2DSOxRUvuDqqSV53-JSFSNb65DiFIKVUILe9mSj2wWCfIOfWTmjFx0uw/exec';
 const CACHE_KEY = 'PENSION_APP_DATA_V2';
 
 let H = [], CUR = null, ALL = [], VERIFIED_AADHAAR = new Set();
@@ -476,7 +476,7 @@ async function syncData(isManual = false){
     if (res && res.headers && res.rows){
       H = res.headers;
       ALL = (res.rows || []).filter(r => r && r.rowIndex != null && Array.isArray(r.data));
-      VERIFIED_AADHAAR = new Set(res.verifiedAadhaar || []);
+      VERIFIED_AADHAAR = new Set((res.verifiedAadhaar || []).map(cleanDigits));
       CURRENT_SYNC_TOKEN = res.syncToken || '';
 
       detectSpecialColumns(); buildFilters(); applyFilters();
@@ -746,7 +746,7 @@ function applyFilters(){
   const gp = document.getElementById('fGP')?.value || '';
   const vStat = document.getElementById('fVerifyStatus')?.value || '';
 
-  // Exclude verified rows completely
+  // Exclude all verified rows completely
   const pendingOnly = ALL.filter(r => r && Array.isArray(r.data) && !isVerified(r));
   const filtered = pendingOnly.filter(r => {
     if (!r || !Array.isArray(r.data)) return false;
@@ -923,7 +923,7 @@ async function openRow(i){
     }
     if (!rowData) throw new Error('Row #' + i + ' data could not be retrieved.');
 
-    // Save origAadhaar so backend can find the record even if Aadhaar was modified in modal
+    // Save origAadhaar so backend can locate row even when filtered or if Aadhaar gets edited
     CUR = { rowIndex: i, origAadhaar: rowData[0], data: rowData.slice() };
     detectSpecialColumns();
 
@@ -940,6 +940,7 @@ async function openRow(i){
 
     document.getElementById('grid').innerHTML = H.map((h, k) => {
       if (HIDDEN_FIELD_IDX.has(k)) return '';
+      // Ensure val is strictly string to preserve leading 0
       const val = CUR.data[k] != null ? String(CUR.data[k]) : '';
       const isReadOnly = isNonEditableField(h, k);
       const showCount = hasGreenCountBadge(h, k);
@@ -958,7 +959,7 @@ async function openRow(i){
               ${isReadOnly ? `<span class="tiny-tag ro" title="Non-editable field">🔒 Locked</span>` : ''}
             </div>
           </div>
-          <input data-i="${k}" value="${esc(val)}"
+          <input type="text" data-i="${k}" value="${esc(val)}"
             ${isReadOnly ? 'readonly class="readonly-input"' : ''}
             oninput="handleFieldInput(${k}, this.value)"
             ${isAadhaar ? 'placeholder="12-digit Aadhaar Number"' : ''}/>
@@ -1089,10 +1090,14 @@ async function save(){
   const targetRow = CUR.rowIndex;
   const origAadhaar = CUR.origAadhaar;
   const data = CUR.data.slice();
-  document.querySelectorAll('#grid input').forEach(inp => data[+inp.dataset.i] = inp.value);
+
+  // Read every single field as exact text (preserves leading zeroes on Account No)
+  document.querySelectorAll('#grid input').forEach(inp => {
+    data[+inp.dataset.i] = String(inp.value || '').trim();
+  });
   CUR.data = data;
 
-  // Locate the master row in ALL (match by origAadhaar or rowIndex)
+  // Update in local array
   const local = ALL.find(x => x && (x.rowIndex === targetRow || (origAadhaar && cleanDigits(x.data[0]) === cleanDigits(origAadhaar))));
   if (local) {
     local.data = data;
@@ -1112,7 +1117,11 @@ async function verify(){
   const targetRow = CUR.rowIndex;
   const origAadhaar = CUR.origAadhaar;
   const data = CUR.data.slice();
-  document.querySelectorAll('#grid input').forEach(inp => data[+inp.dataset.i] = inp.value);
+
+  // Read all inputs as exact string
+  document.querySelectorAll('#grid input').forEach(inp => {
+    data[+inp.dataset.i] = String(inp.value || '').trim();
+  });
 
   if (!confirm('Verify row #' + targetRow + ' and copy to "Verified Data"?')) return;
 
@@ -1120,7 +1129,7 @@ async function verify(){
   const rowEl = document.getElementById('row-' + targetRow);
   if (rowEl){ rowEl.classList.add('verified-hide'); await new Promise(res => setTimeout(res, 450)); }
 
-  // Immediately track as verified locally so filters hide it instantly
+  // Immediately hide locally
   if (aad) VERIFIED_AADHAAR.add(aad);
   if (origAadhaar && cleanDigits(origAadhaar)) VERIFIED_AADHAAR.add(cleanDigits(origAadhaar));
 
@@ -1130,7 +1139,7 @@ async function verify(){
     const msg = await api('verify', { row: targetRow, data, origAadhaar });
     toast('✅ ' + msg, 'ok');
   } catch(e){
-    // If backend rejects, unmark verification and refresh table
+    // If backend rejects, restore row in view
     if (aad) VERIFIED_AADHAAR.delete(aad);
     applyFilters();
     toast('Server error: ' + e.message, 'err');
