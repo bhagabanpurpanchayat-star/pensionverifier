@@ -99,44 +99,6 @@
   .avb-sub{font-size:12px;color:#5f6368;margin-top:2px}
   .avb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
-  /* 3-CHECK PANEL */
-  .check-panel{background:linear-gradient(135deg,#f8f9fc 0%,#eef3fb 100%);
-    border:1px solid #c9d8ef;border-radius:10px;padding:14px 16px;margin-bottom:16px}
-  .check-panel-title{font-size:13px;font-weight:800;color:#174ea6;
-    text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;
-    display:flex;align-items:center;justify-content:space-between}
-  .check-panel-title .progress-pill{background:#fff;color:#174ea6;padding:3px 10px;
-    border-radius:20px;font-size:11px;font-weight:800;border:1px solid #c9d8ef}
-  .check-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
-  .check-card{background:#fff;border:2px solid #dadce0;border-radius:10px;
-    padding:12px 14px;cursor:pointer;transition:all .2s ease;
-    display:flex;align-items:center;gap:12px;user-select:none}
-  .check-card:hover{border-color:#1a73e8;box-shadow:0 2px 8px rgba(26,115,232,.15);transform:translateY(-1px)}
-  .check-card.pending{border-color:#f9ab00;background:#fef7e0;box-shadow:0 2px 8px rgba(249,171,0,.15)}
-  .check-card.checked{border-color:#34a853;background:#e6f4ea;box-shadow:0 2px 8px rgba(24,128,56,.15)}
-  .check-card.saving{border-color:#1a73e8;background:#e8f0fe;cursor:wait}
-  .check-card.error{border-color:#ea4335;background:#fce8e6}
-  .check-box{width:26px;height:26px;border-radius:6px;border:2px solid #dadce0;
-    display:flex;align-items:center;justify-content:center;
-    font-size:15px;font-weight:800;color:#fff;background:#fff;flex-shrink:0;
-    transition:all .2s ease}
-  .check-card.checked .check-box{background:#188038;border-color:#188038}
-  .check-card.pending .check-box{background:#f9ab00;border-color:#f9ab00}
-  .check-card.error .check-box{background:#d93025;border-color:#d93025}
-  .check-info{flex:1;min-width:0}
-  .check-name{font-size:13px;font-weight:700;color:#202124}
-  .check-status{font-size:11px;color:#5f6368;margin-top:2px;font-weight:500;
-                overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .check-card.checked .check-status{color:#137333;font-weight:700}
-  .check-card.pending .check-status{color:#b06000;font-weight:700}
-  .check-card.error .check-status{color:#c5221f;font-weight:700}
-
-  /* Verify gate */
-  .verify-gate{background:#fef7e0;border:1px solid #f9ab00;color:#b06000;
-    padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;
-    margin-bottom:10px;display:flex;align-items:center;gap:6px}
-  .verify-gate.ready{background:#e6f4ea;border-color:#34a853;color:#137333}
-
   .virtual-age-bar{background:linear-gradient(135deg,#e8f0fe 0%,#e6f4ea 100%);
     border:1px solid #b7e1cd;border-radius:10px;padding:10px 14px;margin-bottom:16px;
     display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
@@ -334,43 +296,6 @@
       </div>
     </div>
 
-    <!-- 3-CHECK PANEL — SAVE-BEFORE-VERIFY -->
-    <div class="check-panel" id="checkPanel">
-      <div class="check-panel-title">
-        <span>📋 Required Checks — Tick &amp; Save All 3 Before Verify</span>
-        <span class="progress-pill" id="checkProgress">0 / 3 Saved</span>
-      </div>
-      <div class="check-grid">
-        <div class="check-card" id="chk-aadhaar" onclick="toggleCheck('aadhaar')">
-          <div class="check-box" id="chkbox-aadhaar">✓</div>
-          <div class="check-info">
-            <div class="check-name">1. AADHAR Verification</div>
-            <div class="check-status" id="chkstat-aadhaar">Not Checked</div>
-          </div>
-        </div>
-        <div class="check-card" id="chk-ifsc" onclick="toggleCheck('ifsc')">
-          <div class="check-box" id="chkbox-ifsc">✓</div>
-          <div class="check-info">
-            <div class="check-name">2. IFSC Verification</div>
-            <div class="check-status" id="chkstat-ifsc">Not Checked</div>
-          </div>
-        </div>
-        <div class="check-card" id="chk-account" onclick="toggleCheck('account')">
-          <div class="check-box" id="chkbox-account">✓</div>
-          <div class="check-info">
-            <div class="check-name">3. Account Verification</div>
-            <div class="check-status" id="chkstat-account">Not Checked</div>
-          </div>
-        </div>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button class="p" id="btnSaveChecks" onclick="withLoading(this, saveChecksManual)">
-          💾 Save Checks to Server
-        </button>
-        <span id="checkSaveMsg" style="font-size:12px;color:#5f6368"></span>
-      </div>
-    </div>
-
     <!-- VIRTUAL AGE BAR -->
     <div class="virtual-age-bar" id="vAgeBar">
       <div class="vab-left">
@@ -391,12 +316,9 @@
     </div>
 
     <div class="foot">
-      <div class="verify-gate" id="verifyGate" style="margin-right:auto">
-        ⚠️ Save all 3 checks to enable Verify
-      </div>
-      <button class="m" onclick="withLoading(this, closeModal)">Cancel</button>
+      <button class="m" onclick="closeModal()">Cancel</button>
       <button class="p" onclick="withLoading(this, save)">💾 Save Edits</button>
-      <button class="s" id="btnVerify" disabled onclick="withLoading(this, verify)">✅ Verify &amp; Approve</button>
+      <button class="s" id="btnVerify" onclick="withLoading(this, verify)">✅ Verify &amp; Approve</button>
     </div>
   </div>
 </div>
@@ -425,9 +347,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbzw5hs0RgLd7eapxv-RW_X7jKu__rMujXyWZVAlVDvVNmaD3KbFajYGvucnoA3MxgQY/exec';
+const API = 'https://script.google.com/macros/s/AKfycbz599Z7lPyvphUHoHMNURg0Cm0NdRGiB-3VD05s3oe_qttK6JzWFkD-_vH5Mp4GDAc2/exec';
 const CACHE_KEY = 'PENSION_APP_DATA_V2';
-const CHECKS_KEY = 'PENSION_ROW_CHECKS_V1';
 
 let H = [], CUR = null, ALL = [], VERIFIED_AADHAAR = new Set();
 let CURRENT_SYNC_TOKEN = '';
@@ -444,42 +365,12 @@ let IS_BATCH_RUNNING = false;
 let IS_BATCH_PAUSED = false;
 let BATCH_ABORT_FLAG = false;
 
-/* Local mirror of server "Already Checked" — {rowIndex: {aadhaar, ifsc, account}} of SAVED VALUES */
-let ROW_CHECKS = loadRowChecks();
-
-/* ---- CURRENT_MODE: per-field saved/dirty tracking (in memory only, not persisted) ---- */
-let FIELD_SAVE_STATE = { aadhaar:'idle', ifsc:'idle', account:'idle' };
-// 'idle' | 'saving' | 'saved' | 'error'
-
 function loadRowVerifyMap(){
   try { const raw = localStorage.getItem(BATCH_VERIFY_KEY); return raw ? JSON.parse(raw) : {}; }
   catch(e){ return {}; }
 }
 function saveRowVerifyMap(){
   try { localStorage.setItem(BATCH_VERIFY_KEY, JSON.stringify(ROW_VERIFY_MAP)); } catch(e){}
-}
-function loadRowChecks(){
-  try { const raw = localStorage.getItem(CHECKS_KEY); return raw ? JSON.parse(raw) : {}; }
-  catch(e){ return {}; }
-}
-function saveRowChecksLocal(){
-  try { localStorage.setItem(CHECKS_KEY, JSON.stringify(ROW_CHECKS)); } catch(e){}
-}
-
-/* Get current row's saved checks (from server-synced mirror) */
-function getSavedChecks(rowIndex){
-  const c = ROW_CHECKS[rowIndex];
-  if (!c) return { aadhaar:'', ifsc:'', account:'' };
-  return {
-    aadhaar: String(c.aadhaar || '').trim(),
-    ifsc:    String(c.ifsc    || '').trim(),
-    account: String(c.account || '').trim()
-  };
-}
-/* Are all 3 SAVED (non-empty) values present? */
-function allChecksSaved(rowIndex){
-  const c = getSavedChecks(rowIndex);
-  return !!(c.aadhaar && c.ifsc && c.account);
 }
 
 function renderRowVerifyTag(rowIndex, aadhaar){
@@ -515,8 +406,7 @@ async function withLoading(btn, fn){
   try { await fn(); }
   finally {
     btn.innerHTML = original;
-    if (btn.id !== 'btnVerify') btn.disabled = false;
-    else refreshVerifyGate();
+    btn.disabled = false;
   }
 }
 async function api(action, extra = {}) {
@@ -589,20 +479,6 @@ async function syncData(isManual = false){
       VERIFIED_AADHAAR = new Set(res.verifiedAadhaar || []);
       CURRENT_SYNC_TOKEN = res.syncToken || '';
 
-      /* checkMap now contains ACTUAL VALUES from server — REPLACE local mirror */
-      if (res.checkMap && typeof res.checkMap === 'object'){
-        ROW_CHECKS = {};
-        Object.keys(res.checkMap).forEach(k => {
-          const idx = Number(k); if (!idx) return;
-          ROW_CHECKS[idx] = {
-            aadhaar: String(res.checkMap[k].aadhaar || '').trim(),
-            ifsc:    String(res.checkMap[k].ifsc    || '').trim(),
-            account: String(res.checkMap[k].account || '').trim()
-          };
-        });
-        saveRowChecksLocal();
-      }
-
       detectSpecialColumns(); buildFilters(); applyFilters();
       saveToLocalStorage();
       setSyncStatus('ok', `✅ Synced (${ALL.length} rows)`);
@@ -635,33 +511,6 @@ function detectSpecialColumns(){
     else if (s.includes('timestamp') || s.includes('time')) timeCol = i;
   });
   if (COL_APP_DATE === -1) COL_APP_DATE = dateCol !== -1 ? dateCol : timeCol;
-}
-
-/* Find current value in the modal grid for a given field kind */
-function findColForKind(kind){
-  const hdrs = H.map(h => String(h || '').trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
-  if (kind === 'aadhaar') return 0;
-  if (kind === 'ifsc'){
-    for (let i = 0; i < hdrs.length; i++) if (hdrs[i].includes('ifsc')) return i;
-    return 26;
-  }
-  if (kind === 'account'){
-    for (let i = 0; i < hdrs.length; i++){
-      const s = hdrs[i];
-      if (s.includes('accountno') || s === 'account' || s.includes('acno') ||
-          s.includes('accno') || s.includes('bankacc') || s.includes('bankaccount')) return i;
-    }
-    return 24;
-  }
-  return -1;
-}
-
-function currentFieldValue(kind){
-  const idx = findColForKind(kind);
-  if (idx === -1) return '';
-  const inp = document.querySelector(`#grid input[data-i="${idx}"]`);
-  if (inp) return String(inp.value || '').trim();
-  return CUR ? String(CUR.data[idx] || '').trim() : '';
 }
 
 function isNonEditableField(header, index){
@@ -859,170 +708,13 @@ function handleFieldInput(idx, val){
   if (cntEl) cntEl.textContent = String(val || '').length;
   if (idx === 0) updateAadhaarMatchStatus();
   if (idx === COL_DOB || idx === COL_APP_DATE) recalculateModalAge();
-
-  /* If a value of Aadhaar/IFSC/Account changes after being saved → mark that check DIRTY */
-  if (CUR && CUR.rowIndex != null){
-    const kAad = findColForKind('aadhaar'), kIfsc = findColForKind('ifsc'), kAcc = findColForKind('account');
-    const saved = getSavedChecks(CUR.rowIndex);
-    if (idx === kAad && saved.aadhaar && cleanDigits(saved.aadhaar) !== cleanDigits(val)){
-      FIELD_SAVE_STATE.aadhaar = 'idle';
-      const c = { ...ROW_CHECKS[CUR.rowIndex] };
-      c.aadhaar = '';
-      ROW_CHECKS[CUR.rowIndex] = c; saveRowChecksLocal();
-    }
-    if (idx === kIfsc && saved.ifsc && String(saved.ifsc).toUpperCase() !== String(val || '').toUpperCase()){
-      FIELD_SAVE_STATE.ifsc = 'idle';
-      const c = { ...ROW_CHECKS[CUR.rowIndex] };
-      c.ifsc = '';
-      ROW_CHECKS[CUR.rowIndex] = c; saveRowChecksLocal();
-    }
-    if (idx === kAcc && saved.account && cleanDigits(saved.account) !== cleanDigits(val)){
-      FIELD_SAVE_STATE.account = 'idle';
-      const c = { ...ROW_CHECKS[CUR.rowIndex] };
-      c.account = '';
-      ROW_CHECKS[CUR.rowIndex] = c; saveRowChecksLocal();
-    }
-    refreshCheckUI();
-  }
 }
 
-/* ============= 3-CHECK: SAVE-TO-SERVER FLOW ============= */
-function toggleCheck(kind){
-  if (!CUR) return;
-  /* Toggling: if already saved → UNSAVE (clear). If empty → SAVE current value. */
-  const saved = getSavedChecks(CUR.rowIndex);
-  if (saved[kind]){
-    // Un-tick → clear server value
-    const c = { ...saved };
-    c[kind] = '';
-    ROW_CHECKS[CUR.rowIndex] = c;
-    saveRowChecksLocal();
-    FIELD_SAVE_STATE[kind] = 'idle';
-    refreshCheckUI();
-    persistCheckNow(kind, false);
-  } else {
-    const val = currentFieldValue(kind);
-    if (!val){
-      toast('⚠️ No ' + kind + ' value to check', 'err');
-      return;
-    }
-    FIELD_SAVE_STATE[kind] = 'saving';
-    refreshCheckUI();
-    persistCheckNow(kind, true);
-  }
-}
-
-async function persistCheckNow(kind, ticked){
-  if (!CUR) return;
-  const rowIndex = CUR.rowIndex;
-  const c = { ...getSavedChecks(rowIndex) };
-  if (ticked){
-    c[kind] = currentFieldValue(kind);
-  } else {
-    c[kind] = '';
-  }
-  ROW_CHECKS[rowIndex] = c;
-  saveRowChecksLocal();
-  refreshCheckUI();
-
-  try {
-    await api('saveCheck', { row: rowIndex, checks: c });
-    FIELD_SAVE_STATE[kind] = ticked ? 'saved' : 'idle';
-    toast(`✅ ${kind.toUpperCase()} check saved`, 'ok');
-  } catch(e) {
-    FIELD_SAVE_STATE[kind] = 'error';
-    toast(`❌ Save failed for ${kind}: ${e.message}`, 'err');
-  }
-  refreshCheckUI();
-
-  /* If all 3 saved → trigger auto-sync to pull updated checkMap in background */
-  if (allChecksSaved(rowIndex)){
-    syncData(false).catch(()=>{});
-  }
-}
-
-async function saveChecksManual(){
-  if (!CUR) return;
-  const rowIndex = CUR.rowIndex;
-  const saved = getSavedChecks(rowIndex);
-
-  /* Only save the "ticked" ones. If nothing ticked, nothing to save */
-  const toSave = {
-    aadhaar: saved.aadhaar || '',
-    ifsc:    saved.ifsc    || '',
-    account: saved.account || ''
-  };
-  if (!toSave.aadhaar && !toSave.ifsc && !toSave.account){
-    toast('Nothing to save — tick at least one check', 'info');
-    return;
-  }
-  const msg = document.getElementById('checkSaveMsg');
-  if (msg) msg.textContent = 'Saving…';
-  try {
-    await api('saveCheck', { row: rowIndex, checks: toSave });
-    if (msg) msg.textContent = '✅ Saved to server';
-    toast('✅ Checks saved', 'ok');
-    await syncData(false);
-  } catch(e) {
-    if (msg) msg.textContent = '❌ ' + e.message;
-    toast('Save failed: ' + e.message, 'err');
-  }
-}
-
-function refreshCheckUI(){
-  if (!CUR) return;
-  const saved = getSavedChecks(CUR.rowIndex);
-  ['aadhaar','ifsc','account'].forEach(kind => {
-    const card = document.getElementById('chk-' + kind);
-    const stat = document.getElementById('chkstat-' + kind);
-    if (!card || !stat) return;
-
-    const val = saved[kind];
-    const state = FIELD_SAVE_STATE[kind] || 'idle';
-
-    card.classList.remove('checked','pending','saving','error');
-
-    if (state === 'saving') { card.classList.add('saving'); stat.textContent = 'Saving…'; }
-    else if (state === 'error') { card.classList.add('error'); stat.textContent = 'Save failed — retry'; }
-    else if (val) { card.classList.add('checked'); stat.textContent = `✓ Saved: ${val}`; }
-    else { card.classList.add('pending'); stat.textContent = 'Not Checked'; }
-  });
-
-  const savedCount = (saved.aadhaar?1:0) + (saved.ifsc?1:0) + (saved.account?1:0);
-  const prog = document.getElementById('checkProgress');
-  if (prog) prog.textContent = `${savedCount} / 3 Saved`;
-
-  refreshVerifyGate();
-}
-
-function refreshVerifyGate(){
-  if (!CUR) return;
-  const saved = getSavedChecks(CUR.rowIndex);
-  const missing = [];
-  if (!saved.aadhaar) missing.push('Aadhaar');
-  if (!saved.ifsc) missing.push('IFSC');
-  if (!saved.account) missing.push('Account');
-  const allDone = missing.length === 0;
-
-  const btn = document.getElementById('btnVerify');
-  const gate = document.getElementById('verifyGate');
-  if (btn) btn.disabled = !allDone;
-  if (gate){
-    if (allDone){
-      gate.className = 'verify-gate ready';
-      gate.innerHTML = '✅ All 3 checks SAVED — Verify enabled';
-    } else {
-      gate.className = 'verify-gate';
-      gate.innerHTML = '⚠️ Save these checks first: ' + missing.join(', ');
-    }
-  }
-}
-
-/* ============= TABLE ============= */
+/* ============= TABLE & FILTERING ============= */
 function isVerified(row){
   if (!row || !Array.isArray(row.data)) return false;
-  const aad = String(row.data[0] || '').trim();
-  return aad && VERIFIED_AADHAAR.has(aad);
+  const aad = cleanDigits(row.data[0]);
+  return Boolean(aad && VERIFIED_AADHAAR.has(aad));
 }
 function buildFilters(){
   const ifscs = new Set(), gps = new Set();
@@ -1054,6 +746,7 @@ function applyFilters(){
   const gp = document.getElementById('fGP')?.value || '';
   const vStat = document.getElementById('fVerifyStatus')?.value || '';
 
+  // Exclude verified rows completely
   const pendingOnly = ALL.filter(r => r && Array.isArray(r.data) && !isVerified(r));
   const filtered = pendingOnly.filter(r => {
     if (!r || !Array.isArray(r.data)) return false;
@@ -1079,13 +772,6 @@ function updateCounters(pending){
   set('cTotal', total); set('cPending', pending); set('cVerified', verified);
   set('hTotal', total); set('hPending', pending);
 }
-function renderChecksMiniTag(rowIndex){
-  const saved = getSavedChecks(rowIndex);
-  const done = (saved.aadhaar?1:0) + (saved.ifsc?1:0) + (saved.account?1:0);
-  if (done === 3) return `<span class="tag-verified ok" title="All 3 checks saved">✅ 3/3 Saved</span>`;
-  if (done === 0) return `<span class="tag-verified pending" title="No checks saved">⏳ 0/3 Saved</span>`;
-  return `<span class="tag-verified warn" title="Partial checks saved">⚠️ ${done}/3 Saved</span>`;
-}
 function render(rows){
   const tbl = document.getElementById('tbl');
   if (!tbl) return;
@@ -1093,7 +779,7 @@ function render(rows){
     tbl.innerHTML = '<div style="padding:45px;text-align:center;color:#666;font-size:14.5px">No pending records match your filters.</div>';
     return;
   }
-  let h = '<table><thead><tr><th>Row</th><th>Aadhaar</th><th>Auto-Verify</th><th>Checks</th><th>Name</th><th>Mobile</th><th>Village</th><th>GP/Ward</th><th>IFSC</th><th>Action</th></tr></thead><tbody>';
+  let h = '<table><thead><tr><th>Row</th><th>Aadhaar</th><th>Auto-Verify</th><th>Name</th><th>Mobile</th><th>Village</th><th>GP/Ward</th><th>IFSC</th><th>Action</th></tr></thead><tbody>';
   rows.forEach(r => {
     if (!r || r.rowIndex == null || !Array.isArray(r.data)) return;
     const d = r.data;
@@ -1104,7 +790,6 @@ function render(rows){
       <td>${r.rowIndex}</td>
       <td><b>${esc(aadhaar)}</b>${aadhaar ? `<span class="cnt-badge" style="margin-left:6px">${aadhaar.length}</span>` : ''}</td>
       <td id="vcell-${r.rowIndex}">${renderRowVerifyTag(r.rowIndex, aadhaar)}</td>
-      <td>${renderChecksMiniTag(r.rowIndex)}</td>
       <td>${esc(name)}</td>
       <td>${esc(mobile)}${mobile ? `<span class="cnt-badge" style="margin-left:6px">${mobile.length}</span>` : ''}</td>
       <td>${esc(d[22])}</td>
@@ -1230,15 +915,17 @@ async function openRow(i){
   try {
     let rowObj = ALL.find(x => x && x.rowIndex === i);
     let rowData = (rowObj && Array.isArray(rowObj.data)) ? rowObj.data.slice() : null;
+    let aadhaar = rowData ? rowData[0] : '';
     if (!rowData || !H.length){
-      const res = await api('get', { row: i });
+      const res = await api('get', { row: i, aadhaar });
       if (res && res.headers) H = res.headers;
       if (res && Array.isArray(res.data)) rowData = res.data;
     }
     if (!rowData) throw new Error('Row #' + i + ' data could not be retrieved.');
-    CUR = { rowIndex: i, data: rowData.slice() };
+
+    // Save origAadhaar so backend can find the record even if Aadhaar was modified in modal
+    CUR = { rowIndex: i, origAadhaar: rowData[0], data: rowData.slice() };
     detectSpecialColumns();
-    FIELD_SAVE_STATE = { aadhaar:'idle', ifsc:'idle', account:'idle' };
 
     const cleanTyped = cleanDigits(CUR.data[0]);
     const cachedVerify = ROW_VERIFY_MAP[i] || (cleanTyped ? ROW_VERIFY_MAP[cleanTyped] : null);
@@ -1280,7 +967,6 @@ async function openRow(i){
 
     document.getElementById('mtitle').textContent = 'Verify Row #' + i;
     recalculateModalAge();
-    refreshCheckUI();
     buildAttachments(CUR.data);
     document.getElementById('ov').classList.add('on');
   } catch(e){ toast(e.message, 'err'); }
@@ -1396,20 +1082,26 @@ function closeModal(){
   CURRENT_EXTRACTED_AADHAAR = null;
   CURRENT_IS_BLURRY = false;
   CURRENT_AADHAAR_FILE_OBJ = null;
-  FIELD_SAVE_STATE = { aadhaar:'idle', ifsc:'idle', account:'idle' };
 }
 
 async function save(){
   if (!CUR || CUR.rowIndex == null){ toast('No row selected', 'err'); return; }
   const targetRow = CUR.rowIndex;
+  const origAadhaar = CUR.origAadhaar;
   const data = CUR.data.slice();
   document.querySelectorAll('#grid input').forEach(inp => data[+inp.dataset.i] = inp.value);
   CUR.data = data;
-  const local = ALL.find(x => x && x.rowIndex === targetRow);
-  if (local) local.data = data;
+
+  // Locate the master row in ALL (match by origAadhaar or rowIndex)
+  const local = ALL.find(x => x && (x.rowIndex === targetRow || (origAadhaar && cleanDigits(x.data[0]) === cleanDigits(origAadhaar))));
+  if (local) {
+    local.data = data;
+    local.rowIndex = targetRow;
+  }
   saveToLocalStorage(); applyFilters(); buildFilters();
+
   try {
-    const msg = await api('update', { row: targetRow, data });
+    const msg = await api('update', { row: targetRow, data, origAadhaar });
     toast('✅ ' + msg, 'ok');
   } catch(e){ toast(e.message, 'err'); }
 }
@@ -1417,34 +1109,30 @@ async function save(){
 async function verify(){
   if (!CUR || CUR.rowIndex == null){ toast('No row selected', 'err'); return; }
 
-  /* ENFORCE: all 3 checks must be SAVED */
-  const saved = getSavedChecks(CUR.rowIndex);
-  const missing = [];
-  if (!saved.aadhaar) missing.push('Aadhaar');
-  if (!saved.ifsc)    missing.push('IFSC');
-  if (!saved.account) missing.push('Account');
-  if (missing.length){
-    toast('⚠️ Save these checks first: ' + missing.join(', '), 'err');
-    return;
-  }
-
   const targetRow = CUR.rowIndex;
+  const origAadhaar = CUR.origAadhaar;
   const data = CUR.data.slice();
   document.querySelectorAll('#grid input').forEach(inp => data[+inp.dataset.i] = inp.value);
 
   if (!confirm('Verify row #' + targetRow + ' and copy to "Verified Data"?')) return;
 
-  const aad = String(data[0] || '').trim();
+  const aad = cleanDigits(data[0]);
   const rowEl = document.getElementById('row-' + targetRow);
   if (rowEl){ rowEl.classList.add('verified-hide'); await new Promise(res => setTimeout(res, 450)); }
 
+  // Immediately track as verified locally so filters hide it instantly
   if (aad) VERIFIED_AADHAAR.add(aad);
+  if (origAadhaar && cleanDigits(origAadhaar)) VERIFIED_AADHAAR.add(cleanDigits(origAadhaar));
+
   saveToLocalStorage(); closeModal(); applyFilters();
 
   try {
-    const msg = await api('verify', { row: targetRow, data });
+    const msg = await api('verify', { row: targetRow, data, origAadhaar });
     toast('✅ ' + msg, 'ok');
   } catch(e){
+    // If backend rejects, unmark verification and refresh table
+    if (aad) VERIFIED_AADHAAR.delete(aad);
+    applyFilters();
     toast('Server error: ' + e.message, 'err');
   }
 }
